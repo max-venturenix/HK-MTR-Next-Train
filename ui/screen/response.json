@@ -1,0 +1,105 @@
+{
+  "status": 1,
+  "message": "successful",
+  "sys_time": "2024-03-30 19:34:02",
+  "curr_time": "2024-03-30 19:33:57",
+  "data": {
+    "EAL-KOT": {
+      "curr_time": "2024-03-30 19:33:57",
+      "sys_time": "2024-03-30 19:34:02",
+      "UP": [
+        {
+          "seq": "1",
+          "dest": "LMC",
+          "plat": "1",
+          "time": "2024-03-30 19:34:57",
+          "ttnt": "1",
+          "valid": "Y",
+          "source": "-",
+          "route": "",
+          "timeType": "A"
+        },
+        {
+          "seq": "2",
+          "dest": "LOW",
+          "plat": "1",
+          "time": "2024-03-30 19:39:57",
+          "ttnt": "6",
+          "valid": "Y",
+          "source": "-",
+          "route": "",
+          "timeType": "A"
+        },
+        {
+          "seq": "3",
+          "dest": "LOW",
+          "plat": "1",
+          "time": "2024-03-30 19:43:57",
+          "ttnt": "10",
+          "valid": "Y",
+          "source": "-",
+          "route": "",
+          "timeType": "A"
+        },
+        {
+          "seq": "4",
+          "dest": "LMC",
+          "plat": "1",
+          "time": "2024-03-30 19:47:57",
+          "ttnt": "14",
+          "valid": "Y",
+          "source": "-",
+          "route": "",
+          "timeType": "A"
+        }
+      ],
+      "DOWN": [
+        {
+          "seq": "1",
+          "dest": "ADM",
+          "plat": "2",
+          "time": "2024-03-30 19:33:57",
+          "ttnt": "0",
+          "valid": "Y",
+          "source": "-",
+          "route": "",
+          "timeType": "A"
+        },
+        {
+          "seq": "2",
+          "dest": "ADM",
+          "plat": "2",
+          "time": "2024-03-30 19:37:57",
+          "ttnt": "4",
+          "valid": "Y",
+          "source": "-",
+          "route": "",
+          "timeType": "A"
+        },
+        {
+          "seq": "3",
+          "dest": "ADM",
+          "plat": "2",
+          "time": "2024-03-30 19:41:57",
+          "ttnt": "8",
+          "valid": "Y",
+          "source": "-",
+          "route": "",
+          "timeType": "A"
+        },
+        {
+          "seq": "4",
+          "dest": "ADM",
+          "plat": "2",
+          "time": "2024-03-30 19:45:57",
+          "ttnt": "12",
+          "valid": "Y",
+          "source": "-",
+          "route": "",
+          "timeType": "A"
+        }
+      ]
+    }
+  },
+  "isdelay": "N"
+}
