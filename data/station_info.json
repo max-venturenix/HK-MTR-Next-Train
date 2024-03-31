@@ -1,0 +1,809 @@
+{
+  "AWE": {
+    "code": "AWE",
+    "line": [
+      "AEL"
+    ],
+    "englishName": "AsiaWorld-Expo",
+    "chineseName": "博覽館"
+  },
+  "AIR": {
+    "code": "AIR",
+    "line": [
+      "AEL"
+    ],
+    "englishName": "Airport",
+    "chineseName": "機場"
+  },
+  "TSY": {
+    "code": "TSY",
+    "line": [
+      "AEL",
+      "TCL"
+    ],
+    "englishName": "Tsing Yi",
+    "chineseName": "青衣"
+  },
+  "KOW": {
+    "code": "KOW",
+    "line": [
+      "AEL",
+      "TCL"
+    ],
+    "englishName": "Kowloon",
+    "chineseName": "九龍"
+  },
+  "HOK": {
+    "code": "HOK",
+    "line": [
+      "AEL",
+      "TCL"
+    ],
+    "englishName": "Hong Kong",
+    "chineseName": "香港"
+  },
+  "SUN": {
+    "code": "SUN",
+    "line": [
+      "DRL",
+      "TCL"
+    ],
+    "englishName": "Sunny Bay",
+    "chineseName": "欣澳"
+  },
+  "DIS": {
+    "code": "DIS",
+    "line": [
+      "DRL"
+    ],
+    "englishName": "Disneyland Resort",
+    "chineseName": "迪士尼"
+  },
+  "LOW": {
+    "code": "LOW",
+    "line": [
+      "EAL"
+    ],
+    "englishName": "Lo Wu",
+    "chineseName": "羅湖"
+  },
+  "SHS": {
+    "code": "SHS",
+    "line": [
+      "EAL"
+    ],
+    "englishName": "Sheung Shui",
+    "chineseName": "上水"
+  },
+  "FAN": {
+    "code": "FAN",
+    "line": [
+      "EAL"
+    ],
+    "englishName": "Fanling",
+    "chineseName": "粉嶺"
+  },
+  "TWO": {
+    "code": "TWO",
+    "line": [
+      "EAL"
+    ],
+    "englishName": "Tai Wo",
+    "chineseName": "太和"
+  },
+  "TAP": {
+    "code": "TAP",
+    "line": [
+      "EAL"
+    ],
+    "englishName": "Tai Po Market",
+    "chineseName": "大埔墟"
+  },
+  "UNI": {
+    "code": "UNI",
+    "line": [
+      "EAL"
+    ],
+    "englishName": "University",
+    "chineseName": "大學"
+  },
+  "FOT": {
+    "code": "FOT",
+    "line": [
+      "EAL"
+    ],
+    "englishName": "Fo Tan",
+    "chineseName": "火炭"
+  },
+  "SHT": {
+    "code": "SHT",
+    "line": [
+      "EAL"
+    ],
+    "englishName": "Sha Tin",
+    "chineseName": "沙田"
+  },
+  "TAW": {
+    "code": "TAW",
+    "line": [
+      "EAL",
+      "TML"
+    ],
+    "englishName": "Tai Wai",
+    "chineseName": "大圍"
+  },
+  "KOT": {
+    "code": "KOT",
+    "line": [
+      "EAL",
+      "KTL"
+    ],
+    "englishName": "Kowloon Tong",
+    "chineseName": "九龍塘"
+  },
+  "MKK": {
+    "code": "MKK",
+    "line": [
+      "EAL"
+    ],
+    "englishName": "Mong Kok East",
+    "chineseName": "旺角東"
+  },
+  "HUH": {
+    "code": "HUH",
+    "line": [
+      "EAL",
+      "TML"
+    ],
+    "englishName": "Hung Hom",
+    "chineseName": "紅磡"
+  },
+  "EXC": {
+    "code": "EXC",
+    "line": [
+      "EAL"
+    ],
+    "englishName": "Exhibition Centre",
+    "chineseName": "會展"
+  },
+  "ADM": {
+    "code": "ADM",
+    "line": [
+      "EAL",
+      "ISL",
+      "TWL",
+      "SIL"
+    ],
+    "englishName": "Admiralty",
+    "chineseName": "金鐘"
+  },
+  "LMC": {
+    "code": "LMC",
+    "line": [
+      "EAL"
+    ],
+    "englishName": "Lok Ma Chau",
+    "chineseName": "落馬洲"
+  },
+  "CHW": {
+    "code": "CHW",
+    "line": [
+      "ISL"
+    ],
+    "englishName": "Chai Wan",
+    "chineseName": "柴灣"
+  },
+  "HFC": {
+    "code": "HFC",
+    "line": [
+      "ISL"
+    ],
+    "englishName": "Heng Fa Chuen",
+    "chineseName": "杏花邨"
+  },
+  "SKW": {
+    "code": "SKW",
+    "line": [
+      "ISL"
+    ],
+    "englishName": "Shau Kei Wan",
+    "chineseName": "筲箕灣"
+  },
+  "SWH": {
+    "code": "SWH",
+    "line": [
+      "ISL"
+    ],
+    "englishName": "Sai Wan Ho",
+    "chineseName": "西灣河"
+  },
+  "TAK": {
+    "code": "TAK",
+    "line": [
+      "ISL"
+    ],
+    "englishName": "Tai Koo",
+    "chineseName": "太古"
+  },
+  "QUB": {
+    "code": "QUB",
+    "line": [
+      "ISL",
+      "TKL"
+    ],
+    "englishName": "Quarry Bay",
+    "chineseName": "鰂魚涌"
+  },
+  "NOP": {
+    "code": "NOP",
+    "line": [
+      "ISL",
+      "TKL"
+    ],
+    "englishName": "North Point",
+    "chineseName": "北角"
+  },
+  "FOH": {
+    "code": "FOH",
+    "line": [
+      "ISL"
+    ],
+    "englishName": "Fortress Hill",
+    "chineseName": "炮台山"
+  },
+  "TIH": {
+    "code": "TIH",
+    "line": [
+      "ISL"
+    ],
+    "englishName": "Tin Hau",
+    "chineseName": "天后"
+  },
+  "CAB": {
+    "code": "CAB",
+    "line": [
+      "ISL"
+    ],
+    "englishName": "Causeway Bay",
+    "chineseName": "銅鑼灣"
+  },
+  "WAC": {
+    "code": "WAC",
+    "line": [
+      "ISL"
+    ],
+    "englishName": "Wan Chai",
+    "chineseName": "灣仔"
+  },
+  "CEN": {
+    "code": "CEN",
+    "line": [
+      "ISL",
+      "TWL"
+    ],
+    "englishName": "Central",
+    "chineseName": "中環"
+  },
+  "SHW": {
+    "code": "SHW",
+    "line": [
+      "ISL"
+    ],
+    "englishName": "Sheung Wan",
+    "chineseName": "上環"
+  },
+  "SYP": {
+    "code": "SYP",
+    "line": [
+      "ISL"
+    ],
+    "englishName": "Sai Ying Pun",
+    "chineseName": "西營盤"
+  },
+  "HKU": {
+    "code": "HKU",
+    "line": [
+      "ISL"
+    ],
+    "englishName": "HKU",
+    "chineseName": "香港大學"
+  },
+  "KET": {
+    "code": "KET",
+    "line": [
+      "ISL"
+    ],
+    "englishName": "Kennedy Town",
+    "chineseName": "堅尼地城"
+  },
+  "TIK": {
+    "code": "TIK",
+    "line": [
+      "KTL",
+      "TKL"
+    ],
+    "englishName": "Tiu Keng Leng",
+    "chineseName": "調景嶺"
+  },
+  "YAT": {
+    "code": "YAT",
+    "line": [
+      "KTL",
+      "TKL"
+    ],
+    "englishName": "Yau Tong",
+    "chineseName": "油塘"
+  },
+  "LAT": {
+    "code": "LAT",
+    "line": [
+      "KTL"
+    ],
+    "englishName": "Lam Tin",
+    "chineseName": "藍田"
+  },
+  "KWT": {
+    "code": "KWT",
+    "line": [
+      "KTL"
+    ],
+    "englishName": "Kwun Tong",
+    "chineseName": "觀塘"
+  },
+  "NTK": {
+    "code": "NTK",
+    "line": [
+      "KTL"
+    ],
+    "englishName": "Ngau Tau Kok",
+    "chineseName": "牛頭角"
+  },
+  "KOB": {
+    "code": "KOB",
+    "line": [
+      "KTL"
+    ],
+    "englishName": "Kowloon Bay",
+    "chineseName": "九龍灣"
+  },
+  "CHH": {
+    "code": "CHH",
+    "line": [
+      "KTL"
+    ],
+    "englishName": "Choi Hung",
+    "chineseName": "彩虹"
+  },
+  "DIH": {
+    "code": "DIH",
+    "line": [
+      "KTL",
+      "TML"
+    ],
+    "englishName": "Diamond Hill",
+    "chineseName": "鑽石山"
+  },
+  "WTS": {
+    "code": "WTS",
+    "line": [
+      "KTL"
+    ],
+    "englishName": "Wong Tai Sin",
+    "chineseName": "黃大仙"
+  },
+  "LOF": {
+    "code": "LOF",
+    "line": [
+      "KTL"
+    ],
+    "englishName": "Lok Fu",
+    "chineseName": "樂富"
+  },
+  "SKM": {
+    "code": "SKM",
+    "line": [
+      "KTL"
+    ],
+    "englishName": "Shek Kip Mei",
+    "chineseName": "石硤尾"
+  },
+  "PRE": {
+    "code": "PRE",
+    "line": [
+      "KTL",
+      "TWL"
+    ],
+    "englishName": "Prince Edward",
+    "chineseName": "太子"
+  },
+  "MOK": {
+    "code": "MOK",
+    "line": [
+      "KTL",
+      "TWL"
+    ],
+    "englishName": "Mong Kok",
+    "chineseName": "旺角"
+  },
+  "YMT": {
+    "code": "YMT",
+    "line": [
+      "KTL",
+      "TWL"
+    ],
+    "englishName": "Yau Ma Tei",
+    "chineseName": "油麻地"
+  },
+  "HOM": {
+    "code": "HOM",
+    "line": [
+      "KTL",
+      "TML"
+    ],
+    "englishName": "Ho Man Tin",
+    "chineseName": "何文田"
+  },
+  "WHA": {
+    "code": "WHA",
+    "line": [
+      "KTL"
+    ],
+    "englishName": "Whampoa",
+    "chineseName": "黃埔"
+  },
+  "WKS": {
+    "code": "WKS",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Wu Kai Sha",
+    "chineseName": "烏溪沙"
+  },
+  "MOS": {
+    "code": "MOS",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Ma On Shan",
+    "chineseName": "馬鞍山"
+  },
+  "HEO": {
+    "code": "HEO",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Heng On",
+    "chineseName": "恆安"
+  },
+  "TSH": {
+    "code": "TSH",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Tai Shui Hang",
+    "chineseName": "大水坑"
+  },
+  "SHM": {
+    "code": "SHM",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Shek Mun",
+    "chineseName": "石門"
+  },
+  "CIO": {
+    "code": "CIO",
+    "line": [
+      "TML"
+    ],
+    "englishName": "City One",
+    "chineseName": "第一城"
+  },
+  "STW": {
+    "code": "STW",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Sha Tin Wai",
+    "chineseName": "沙田圍"
+  },
+  "CKT": {
+    "code": "CKT",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Che Kung Temple",
+    "chineseName": "車公廟"
+  },
+  "HIK": {
+    "code": "HIK",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Hin Keng",
+    "chineseName": "顯徑"
+  },
+  "KAT": {
+    "code": "KAT",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Kai Tak",
+    "chineseName": "啟德"
+  },
+  "SUW": {
+    "code": "SUW",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Sung Wong Toi",
+    "chineseName": "宋皇臺"
+  },
+  "TKW": {
+    "code": "TKW",
+    "line": [
+      "TML"
+    ],
+    "englishName": "To Kwa Wan",
+    "chineseName": "土瓜灣"
+  },
+  "ETS": {
+    "code": "ETS",
+    "line": [
+      "TML"
+    ],
+    "englishName": "East Tsim Sha Tsui",
+    "chineseName": "尖東"
+  },
+  "AUS": {
+    "code": "AUS",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Austin",
+    "chineseName": "柯士甸"
+  },
+  "NAC": {
+    "code": "NAC",
+    "line": [
+      "TML",
+      "TCL"
+    ],
+    "englishName": "Nam Cheong",
+    "chineseName": "南昌"
+  },
+  "MEF": {
+    "code": "MEF",
+    "line": [
+      "TML",
+      "TWL"
+    ],
+    "englishName": "Mei Foo",
+    "chineseName": "美孚"
+  },
+  "TWW": {
+    "code": "TWW",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Tsuen Wan West",
+    "chineseName": "荃灣西"
+  },
+  "KSR": {
+    "code": "KSR",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Kam Sheung Road",
+    "chineseName": "錦上路"
+  },
+  "YUL": {
+    "code": "YUL",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Yuen Long",
+    "chineseName": "元朗"
+  },
+  "LOP": {
+    "code": "LOP",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Long Ping",
+    "chineseName": "朗屏"
+  },
+  "TIS": {
+    "code": "TIS",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Tin Shui Wai",
+    "chineseName": "天水圍"
+  },
+  "SIH": {
+    "code": "SIH",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Siu Hong",
+    "chineseName": "兆康"
+  },
+  "TUM": {
+    "code": "TUM",
+    "line": [
+      "TML"
+    ],
+    "englishName": "Tuen Mun",
+    "chineseName": "屯門"
+  },
+  "TUC": {
+    "code": "TUC",
+    "line": [
+      "TCL"
+    ],
+    "englishName": "Tung Chung",
+    "chineseName": "東涌"
+  },
+  "LAK": {
+    "code": "LAK",
+    "line": [
+      "TCL",
+      "TWL"
+    ],
+    "englishName": "Lai King",
+    "chineseName": "茘景"
+  },
+  "OLY": {
+    "code": "OLY",
+    "line": [
+      "TCL"
+    ],
+    "englishName": "Olympic",
+    "chineseName": "奧運"
+  },
+  "POA": {
+    "code": "POA",
+    "line": [
+      "TKL"
+    ],
+    "englishName": "Po Lam",
+    "chineseName": "寶琳"
+  },
+  "HAH": {
+    "code": "HAH",
+    "line": [
+      "TKL"
+    ],
+    "englishName": "Hang Hau",
+    "chineseName": "坑口"
+  },
+  "TKO": {
+    "code": "TKO",
+    "line": [
+      "TKL"
+    ],
+    "englishName": "Tseung Kwan O",
+    "chineseName": "將軍澳"
+  },
+  "LHP": {
+    "code": "LHP",
+    "line": [
+      "TKL"
+    ],
+    "englishName": "LOHAS Park",
+    "chineseName": "康城"
+  },
+  "TSW": {
+    "code": "TSW",
+    "line": [
+      "TWL"
+    ],
+    "englishName": "Tsuen Wan",
+    "chineseName": "荃灣"
+  },
+  "TWH": {
+    "code": "TWH",
+    "line": [
+      "TWL"
+    ],
+    "englishName": "Tai Wo Hau",
+    "chineseName": "大窩口"
+  },
+  "KWH": {
+    "code": "KWH",
+    "line": [
+      "TWL"
+    ],
+    "englishName": "Kwai Hing",
+    "chineseName": "葵興"
+  },
+  "KWF": {
+    "code": "KWF",
+    "line": [
+      "TWL"
+    ],
+    "englishName": "Kwai Fong",
+    "chineseName": "葵芳"
+  },
+  "LCK": {
+    "code": "LCK",
+    "line": [
+      "TWL"
+    ],
+    "englishName": "Lai Chi Kok",
+    "chineseName": "茘枝角"
+  },
+  "CSW": {
+    "code": "CSW",
+    "line": [
+      "TWL"
+    ],
+    "englishName": "Cheung Sha Wan",
+    "chineseName": "長沙灣"
+  },
+  "SSP": {
+    "code": "SSP",
+    "line": [
+      "TWL"
+    ],
+    "englishName": "Sham Shui Po",
+    "chineseName": "深水埗"
+  },
+  "JOR": {
+    "code": "JOR",
+    "line": [
+      "TWL"
+    ],
+    "englishName": "Jordan",
+    "chineseName": "佐敦"
+  },
+  "TST": {
+    "code": "TST",
+    "line": [
+      "TWL"
+    ],
+    "englishName": "Tsim Sha Tsui",
+    "chineseName": "尖沙咀"
+  },
+  "OCP": {
+    "code": "OCP",
+    "line": [
+      "SIL"
+    ],
+    "englishName": "Ocean Park",
+    "chineseName": "海洋公園"
+  },
+  "WCH": {
+    "code": "WCH",
+    "line": [
+      "SIL"
+    ],
+    "englishName": "Wong Chuk Hang",
+    "chineseName": "黃竹坑"
+  },
+  "LET": {
+    "code": "LET",
+    "line": [
+      "SIL"
+    ],
+    "englishName": "Lei Tung",
+    "chineseName": "利東"
+  },
+  "SOH": {
+    "code": "SOH",
+    "line": [
+      "SIL"
+    ],
+    "englishName": "South Horizons",
+    "chineseName": "海怡半島"
+  },
+  "": {
+    "code": "",
+    "line": [
+      ""
+    ],
+    "englishName": "",
+    "chineseName": ""
+  }
+}

@@ -30,6 +30,7 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
                     <Picker.Item label="鑽石山" value="DIH"/>
                     <Picker.Item label="九龍塘" value="KOT"/>
                     <Picker.Item label="大圍" value="TAW"/>
+                    <Picker.Item label="火炭" value="FOT"/>
                 </Picker>
                 <Button title="搜尋" onPress={() => {
                     navigation.navigate("NextTrain", {

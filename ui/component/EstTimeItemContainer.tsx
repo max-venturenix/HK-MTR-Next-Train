@@ -1,77 +1,47 @@
-import {ScrollView, StyleSheet, Text, View} from "react-native";
+import {StyleSheet, Text, View} from "react-native";
 import EstTimeItem from "./EstTimeItem";
 import {DataTable} from "react-native-paper";
-import {useEffect, useState} from "react";
-import {MtrRealTimeData} from "../../data/type/MtrRealTimeData";
-import {getMTRRealTimeData} from "../../api/MTRApi";
-import {mtrLineData} from "../../data/LineData";
-import mockData from "../screen/response.json";
-import LoadingContainer from "./LoadingContainer";
+import {LineStaData, MtrRealTimeData} from "../../data/type/MtrRealTimeData";
+import {mtrLineData, mtrLineInfo} from "../../data/LineData";
 
 type Props = {
     lineCode: string,
-    stationCode: string
+    stationCode: string,
+    data: LineStaData
 }
 
-export default function EstTimeItemContainer({lineCode, stationCode}: Props) {
-    const [data, setData] = useState<MtrRealTimeData | null | undefined>(undefined);
-
-    const fetchData = async (lineCode: string, stationCode: string) => {
-        const responseData = await getMTRRealTimeData(lineCode, stationCode);
-        // console.log(responseData);
-        setData(responseData);
-    }
-
-    useEffect(() => {
-        fetchData(lineCode, stationCode);
-        // setData(mockData);
-    }, []);
-
-    const renderTable = () => {
-        if (data) {
-            return (
-                <View>
-                    <Text style={styles.lineTitle}>{mtrLineData[lineCode]}</Text>
-                    <DataTable>
-                        <DataTable.Header>
-                            <DataTable.Title style={styles.cellDest}>目的地</DataTable.Title>
-                            <DataTable.Title style={styles.cellPlatform}>月台</DataTable.Title>
-                            <DataTable.Title style={styles.cellTime}>下一班車</DataTable.Title>
-                        </DataTable.Header>
-
-                        {
-                            data.data[`${lineCode}-${stationCode}`].UP.map((value, index, array) => (
-                                <EstTimeItem data={value} key={value.time}/>
-                            ))
-                        }
-                    </DataTable>
-
-                    <DataTable>
-                        <DataTable.Header>
-                            <DataTable.Title style={styles.cellDest}>目的地</DataTable.Title>
-                            <DataTable.Title style={styles.cellPlatform}>月台</DataTable.Title>
-                            <DataTable.Title style={styles.cellTime}>下一班車</DataTable.Title>
-                        </DataTable.Header>
-
-                        {
-                            data.data[`${lineCode}-${stationCode}`].DOWN.map((value, index, array) => (
-                                <EstTimeItem data={value} key={value.time}/>
-                            ))
-                        }
-                    </DataTable>
-                </View>
-            )
-        } else {
-            return (
-                <View>
-                    <LoadingContainer/>
-                </View>
-            )
-        }
-    }
-
+export default function EstTimeItemContainer({lineCode, stationCode, data}: Props) {
     return (
-        renderTable()
+        <View>
+            <Text style={[styles.lineTitle, {backgroundColor: mtrLineInfo[lineCode].colorCode}]}>{mtrLineData[lineCode]}</Text>
+            <DataTable style={{paddingHorizontal: 4}}>
+                <DataTable.Header>
+                    <DataTable.Title style={styles.cellDest}>目的地</DataTable.Title>
+                    <DataTable.Title style={styles.cellPlatform}>月台</DataTable.Title>
+                    <DataTable.Title style={styles.cellTime}>下一班車</DataTable.Title>
+                </DataTable.Header>
+
+                {
+                    data.UP.map((value) => (
+                        <EstTimeItem data={value} key={value.time}/>
+                    ))
+                }
+            </DataTable>
+
+            <DataTable style={{paddingHorizontal: 4}}>
+                <DataTable.Header>
+                    <DataTable.Title style={styles.cellDest}>目的地</DataTable.Title>
+                    <DataTable.Title style={styles.cellPlatform}>月台</DataTable.Title>
+                    <DataTable.Title style={styles.cellTime}>下一班車</DataTable.Title>
+                </DataTable.Header>
+
+                {
+                    data.DOWN.map((value) => (
+                        <EstTimeItem data={value} key={value.time}/>
+                    ))
+                }
+            </DataTable>
+        </View>
     )
 }
 
@@ -80,7 +50,7 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         textAlign: "center",
         fontSize: 14,
-        backgroundColor: "grey",
+        // backgroundColor: "grey",
         paddingVertical: 8,
         color: "white"
     },
