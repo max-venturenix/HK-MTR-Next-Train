@@ -1,19 +1,19 @@
-import {GenerateStyles} from "../../styles/GenerateStyles";
+import {GenerateStyles} from "../../../styles/GenerateStyles";
 import {Pressable, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View} from "react-native";
 import React, {useEffect, useLayoutEffect, useRef, useState} from "react";
-import {NextTrainProps} from "../../data/navigation/NavigationData";
-import {stationInfoData} from "../../data/StationInfoData";
+import {NextTrainProps} from "../../../data/navigation/NavigationData";
+import {stationInfoData} from "../../../data/StationInfoData";
 
-import EstTimeItemContainer from "../component/EstTimeItemContainer";
+import EstTimeItemContainer from "./component/EstTimeItemContainer";
 import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
 import {faRotate} from "@fortawesome/free-solid-svg-icons";
 import moment from "moment/moment";
-import {LineStaData, MtrRealTimeData} from "../../data/type/MtrRealTimeData";
-import {getMTRRealTimeData} from "../../api/MTRApi";
-import LoadingContainer from "../component/LoadingContainer";
+import {LineStaData, MtrRealTimeData} from "../../../data/type/MtrRealTimeData";
+import {getMTRRealTimeData} from "../../../api/MTRApi";
+import LoadingContainer from "../../component/LoadingContainer";
 import {ActivityIndicator} from "react-native-paper";
 
-export default function NextTrainScreen({route, navigation}: NextTrainProps) {
+export default function NextTrainByStationScreen({route, navigation}: NextTrainProps) {
     const {stationCode} = route.params;
 
     const [dataList, setDataList] = useState<MtrRealTimeData[] | undefined>(undefined);

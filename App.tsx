@@ -1,8 +1,7 @@
 import {NavigationContainer} from "@react-navigation/native";
 import {createNativeStackNavigator} from "@react-navigation/native-stack";
-import HomeScreen from "./ui/screen/HomeScreen";
-import NextTrainScreen from "./ui/screen/NextTrainScreen";
-import {Pressable} from "react-native";
+import HomeScreen from "./ui/screen/HomeScreen/HomeScreen";
+import NextTrainByStationScreen from "./ui/screen/NextTrainByStationScreen/NextTrainByStationScreen";
 
 export default function App() {
     const Stack = createNativeStackNavigator();
@@ -25,7 +24,7 @@ export default function App() {
                 />
                 <Stack.Screen
                     name="NextTrain"
-                    component={NextTrainScreen}
+                    component={NextTrainByStationScreen}
                 />
             </Stack.Navigator>
         </NavigationContainer>

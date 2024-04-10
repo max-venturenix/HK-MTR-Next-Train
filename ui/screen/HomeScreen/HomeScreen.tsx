@@ -1,9 +1,9 @@
 import {SafeAreaView, View, StyleSheet, Button, Text, Image} from "react-native";
-import EstTimeItemContainer from "../component/EstTimeItemContainer";
-import {GenerateStyles} from "../../styles/GenerateStyles";
+import EstTimeItemContainer from "../NextTrainByStationScreen/component/EstTimeItemContainer";
+import {GenerateStyles} from "../../../styles/GenerateStyles";
 import {Picker} from "@react-native-picker/picker";
 import {useState} from "react";
-import {HomeScreenProps} from "../../data/navigation/NavigationData";
+import {HomeScreenProps} from "../../../data/navigation/NavigationData";
 
 export default function HomeScreen({navigation}: HomeScreenProps) {
     const [stationName, setStationName] = useState<string>("DIH");

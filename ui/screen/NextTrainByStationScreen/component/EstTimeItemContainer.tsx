@@ -1,8 +1,8 @@
 import {StyleSheet, Text, View} from "react-native";
 import EstTimeItem from "./EstTimeItem";
 import {DataTable} from "react-native-paper";
-import {LineStaData, MtrRealTimeData} from "../../data/type/MtrRealTimeData";
-import {mtrLineData, mtrLineInfo} from "../../data/LineData";
+import {LineStaData, MtrRealTimeData} from "../../../../data/type/MtrRealTimeData";
+import {mtrLineData, mtrLineInfo} from "../../../../data/LineData";
 
 type Props = {
     lineCode: string,
