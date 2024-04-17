@@ -1,7 +1,7 @@
-import {StationInfo} from "./type/StationInfo";
+import {StationData} from "./type/StationData";
 import data from "./station_info.json";
 
-export const stationInfoData: StationInfo = data;
+export const stationInfoData: StationData = data;
 
 // export const stationInfoData: StationInfo =
 //     {

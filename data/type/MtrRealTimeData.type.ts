@@ -1,4 +1,4 @@
-export interface MtrRealTimeData {
+export interface MtrRealTimeDataType {
     status: number;
     message: string;
     sys_time: string;
@@ -14,8 +14,8 @@ export interface Data {
 export interface LineStaData {
     curr_time: string;
     sys_time: string;
-    UP: TrainArrivalData[];
-    DOWN: TrainArrivalData[];
+    UP?: TrainArrivalData[];
+    DOWN?: TrainArrivalData[];
 }
 
 export interface TrainArrivalData {

@@ -11,15 +11,20 @@ export const mtrLineData: MTRLineData = {
 }
 export const mtrLineInfo: MTRLineInfo = {
     "AEL": {
+        chineseName: "機場快線",
+        englishName: "Airport Express",
+        colorCode: "#01898E"
+    },
+    "TCL": {
         chineseName: "東涌線",
         englishName: "Tung Chung Line",
         colorCode: "#F59547"
     },
-    "DRL": {
-        chineseName: "迪士尼線",
-        englishName: "Disneyland Resort Line",
-        colorCode: "#ED75AC"
-    },
+    // "DRL": {
+    //     chineseName: "迪士尼線",
+    //     englishName: "Disneyland Resort Line",
+    //     colorCode: "#ED75AC"
+    // },
     "EAL": {
         chineseName: "東鐵線",
         englishName: "East Rail Line",

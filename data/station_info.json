@@ -45,19 +45,10 @@
   "SUN": {
     "code": "SUN",
     "line": [
-      "DRL",
       "TCL"
     ],
     "englishName": "Sunny Bay",
     "chineseName": "欣澳"
-  },
-  "DIS": {
-    "code": "DIS",
-    "line": [
-      "DRL"
-    ],
-    "englishName": "Disneyland Resort",
-    "chineseName": "迪士尼"
   },
   "LOW": {
     "code": "LOW",

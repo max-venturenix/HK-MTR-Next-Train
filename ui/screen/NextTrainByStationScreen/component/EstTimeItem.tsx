@@ -1,7 +1,7 @@
 import {StyleSheet, Text, View} from "react-native";
 import {DataTable} from "react-native-paper";
 import moment from "moment";
-import {TrainArrivalData} from "../../../../data/type/MtrRealTimeData";
+import {TrainArrivalData} from "../../../../data/type/MtrRealTimeData.type";
 import {stationInfoData} from "../../../../data/StationInfoData";
 
 type Props = {

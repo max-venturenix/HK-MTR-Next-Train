@@ -4,9 +4,12 @@ import {GenerateStyles} from "../../../styles/GenerateStyles";
 import {Picker} from "@react-native-picker/picker";
 import {useState} from "react";
 import {HomeScreenProps} from "../../../data/navigation/NavigationData";
+import LinePicker from "./component/LinePicker";
+import StationPicker from "./component/StationPicker";
 
 export default function HomeScreen({navigation}: HomeScreenProps) {
-    const [stationName, setStationName] = useState<string>("DIH");
+    const [lineCode, setLineCode] = useState<string>("KTL");
+    const [stationCode, setStationCode] = useState<string>("DIH");
 
     return (
         <SafeAreaView style={[GenerateStyles.droidSafeArea]}>
@@ -18,23 +21,14 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
                     resizeMethod="auto"
                     source={{uri: "https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/HK_MTR_logo.svg/1000px-HK_MTR_logo.svg.png?20210510163406"}}
                 />
-                <Text style={styles.label}>請選擇車站</Text>
-                <Picker
-                    selectedValue={stationName}
-                    onValueChange={(itemValue, itemIndex) =>
-                        setStationName(itemValue)
-                    }
-                >
-                    <Picker.Item label="樂富" value="LOF"/>
-                    <Picker.Item label="油塘" value="YAT"/>
-                    <Picker.Item label="鑽石山" value="DIH"/>
-                    <Picker.Item label="九龍塘" value="KOT"/>
-                    <Picker.Item label="大圍" value="TAW"/>
-                    <Picker.Item label="火炭" value="FOT"/>
-                </Picker>
+
+                <LinePicker lineCode={lineCode} setLineCode={setLineCode} setStationCode={setStationCode}/>
+
+                <StationPicker lineCode={lineCode} stationCode={stationCode} setStationCode={setStationCode}/>
+
                 <Button title="搜尋" onPress={() => {
                     navigation.navigate("NextTrain", {
-                        stationCode: stationName
+                        stationCode: stationCode
                     })
                 }}/>
             </View>

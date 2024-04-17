@@ -1,7 +1,7 @@
 import {StyleSheet, Text, View} from "react-native";
 import EstTimeItem from "./EstTimeItem";
 import {DataTable} from "react-native-paper";
-import {LineStaData, MtrRealTimeData} from "../../../../data/type/MtrRealTimeData";
+import {LineStaData, MtrRealTimeDataType} from "../../../../data/type/MtrRealTimeData.type";
 import {mtrLineData, mtrLineInfo} from "../../../../data/LineData";
 
 type Props = {
@@ -11,36 +11,59 @@ type Props = {
 }
 
 export default function EstTimeItemContainer({lineCode, stationCode, data}: Props) {
+    const renderUpTable = () => {
+        if (data.UP) {
+            return (
+                <DataTable style={{paddingHorizontal: 4}}>
+                    <DataTable.Header>
+                        <DataTable.Title style={styles.cellDest}>目的地</DataTable.Title>
+                        <DataTable.Title style={styles.cellPlatform}>月台</DataTable.Title>
+                        <DataTable.Title style={styles.cellTime}>下一班車</DataTable.Title>
+                    </DataTable.Header>
+
+                    {
+                        data.UP.map((value) => (
+                            <EstTimeItem data={value} key={value.time}/>
+                        ))
+                    }
+                </DataTable>
+            )
+        }
+    }
+
+    const renderDownTable = () => {
+        if (data.DOWN) {
+            return (
+                <DataTable style={{paddingHorizontal: 4}}>
+                    <DataTable.Header>
+                        <DataTable.Title style={styles.cellDest}>目的地</DataTable.Title>
+                        <DataTable.Title style={styles.cellPlatform}>月台</DataTable.Title>
+                        <DataTable.Title style={styles.cellTime}>下一班車</DataTable.Title>
+                    </DataTable.Header>
+
+                    {
+                        data.DOWN.map((value) => (
+                            <EstTimeItem data={value} key={value.time}/>
+                        ))
+                    }
+                </DataTable>
+            )
+        }
+    }
+
     return (
         <View>
-            <Text style={[styles.lineTitle, {backgroundColor: mtrLineInfo[lineCode].colorCode}]}>{mtrLineData[lineCode]}</Text>
-            <DataTable style={{paddingHorizontal: 4}}>
-                <DataTable.Header>
-                    <DataTable.Title style={styles.cellDest}>目的地</DataTable.Title>
-                    <DataTable.Title style={styles.cellPlatform}>月台</DataTable.Title>
-                    <DataTable.Title style={styles.cellTime}>下一班車</DataTable.Title>
-                </DataTable.Header>
+            <Text
+                style={[styles.lineTitle, {backgroundColor: mtrLineInfo[lineCode].colorCode}]}>
+                {mtrLineInfo[lineCode].chineseName}
+            </Text>
 
-                {
-                    data.UP.map((value) => (
-                        <EstTimeItem data={value} key={value.time}/>
-                    ))
-                }
-            </DataTable>
-
-            <DataTable style={{paddingHorizontal: 4}}>
-                <DataTable.Header>
-                    <DataTable.Title style={styles.cellDest}>目的地</DataTable.Title>
-                    <DataTable.Title style={styles.cellPlatform}>月台</DataTable.Title>
-                    <DataTable.Title style={styles.cellTime}>下一班車</DataTable.Title>
-                </DataTable.Header>
-
-                {
-                    data.DOWN.map((value) => (
-                        <EstTimeItem data={value} key={value.time}/>
-                    ))
-                }
-            </DataTable>
+            {
+                renderUpTable()
+            }
+            {
+                renderDownTable()
+            }
         </View>
     )
 }

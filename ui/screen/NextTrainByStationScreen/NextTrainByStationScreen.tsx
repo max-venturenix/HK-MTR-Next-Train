@@ -8,7 +8,7 @@ import EstTimeItemContainer from "./component/EstTimeItemContainer";
 import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
 import {faRotate} from "@fortawesome/free-solid-svg-icons";
 import moment from "moment/moment";
-import {LineStaData, MtrRealTimeData} from "../../../data/type/MtrRealTimeData";
+import {LineStaData, MtrRealTimeDataType} from "../../../data/type/MtrRealTimeData.type";
 import {getMTRRealTimeData} from "../../../api/MTRApi";
 import LoadingContainer from "../../component/LoadingContainer";
 import {ActivityIndicator} from "react-native-paper";
@@ -16,18 +16,18 @@ import {ActivityIndicator} from "react-native-paper";
 export default function NextTrainByStationScreen({route, navigation}: NextTrainProps) {
     const {stationCode} = route.params;
 
-    const [dataList, setDataList] = useState<MtrRealTimeData[] | undefined>(undefined);
+    const [dataList, setDataList] = useState<MtrRealTimeDataType[] | undefined>(undefined);
     const [updatedTime, setUpdateTime] = useState<string | undefined>(undefined);
     const [refreshing, setRefreshing] = useState<boolean>(false);
 
     const fetchData = async () => {
         setDataList(undefined);
-        const responseDataList: MtrRealTimeData[] = [];
+        const responseDataList: MtrRealTimeDataType[] = [];
         for (const lineCode of stationInfoData[stationCode].line) {
             const responseData = await getMTRRealTimeData(lineCode, stationCode);
             responseDataList.push(responseData);
         }
-        console.log(responseDataList);
+        // console.log(responseDataList);
         setDataList(responseDataList);
         setUpdateTime(moment().format("YYYY-MM-DD HH:mm:ss"));
     }
@@ -41,13 +41,6 @@ export default function NextTrainByStationScreen({route, navigation}: NextTrainP
     useLayoutEffect(() => {
         navigation.setOptions({
             title: stationInfoData[stationCode].chineseName,
-            // headerRight: () => (
-            //     <Pressable onPress={() => navigation.replace("NextTrain", {
-            //         stationCode: stationCode
-            //     })}>
-            //         <FontAwesomeIcon icon={faRotate} size={24} style={{color: "#ffffff",}}/>
-            //     </Pressable>
-            // )
         })
     }, [navigation, stationCode]);
 
