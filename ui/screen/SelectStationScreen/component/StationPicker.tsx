@@ -1,8 +1,10 @@
 import React from "react";
 import {StyleSheet, Text, View} from "react-native";
 import {Picker} from "@react-native-picker/picker";
-import {stationInfoData} from "../../../../data/StationInfoData";
-import {mtrLineInfo} from "../../../../data/LineData";
+import lineInfoJson from "../../../../data/json/line_info.json";
+import stationInfoJson from "../../../../data/json/station_info.json";
+import {MTRStationInfo} from "../../../../data/type/MTRStationInfo.type";
+import {MTRLineInfo} from "../../../../data/type/MTRLineInfo.type";
 
 type Props = {
     lineCode: string,
@@ -11,27 +13,14 @@ type Props = {
 }
 
 export default function StationPicker({lineCode, stationCode, setStationCode}: Props) {
+    const mtrLineInfo = lineInfoJson as MTRLineInfo;
+    const mtrStationInfo = stationInfoJson as MTRStationInfo;
+
     const renderStationPickerItems = () => {
-        // const stationPickerItems: JSX.Element[] = [];
-        // let isFirstStation = true;
-        // for (const stationCode in stationInfoData) {
-        //     stationInfoData[stationCode].line.forEach((value) => {
-        //         if (value === lineCode) {
-        //             stationPickerItems.push(
-        //                 <Picker.Item
-        //                     key={stationCode}
-        //                     label={stationInfoData[stationCode].chineseName}
-        //                     value={stationCode}
-        //                 />
-        //             );
-        //         }
-        //     })
-        // }
-        // return stationPickerItems;
         return mtrLineInfo[lineCode].stations.map((item) => (
             <Picker.Item
                 key={item}
-                label={stationInfoData[item].chineseName}
+                label={mtrStationInfo[item].chineseName}
                 value={item}
             />
         ))

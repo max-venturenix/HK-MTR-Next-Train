@@ -2,6 +2,8 @@ import {NativeStackNavigationProp, NativeStackScreenProps} from "@react-navigati
 
 export type RootStackParamList = {
     Home: undefined;
+    SelectStation: undefined;
+    FavoriteStations: undefined;
     NextTrain: {
         stationCode: string
     };
@@ -14,7 +16,17 @@ export type HomeScreenProps = NativeStackScreenProps<
     "Home"
 >;
 
-export type NextTrainProps = NativeStackScreenProps<
+export type SelectStationScreenProps = NativeStackScreenProps<
+    RootStackParamList,
+    "SelectStation"
+>;
+
+export type FavoriteStationsScreenProps = NativeStackScreenProps<
+    RootStackParamList,
+    "FavoriteStations"
+>;
+
+export type NextTrainByStationProps = NativeStackScreenProps<
     RootStackParamList,
     "NextTrain"
 >;

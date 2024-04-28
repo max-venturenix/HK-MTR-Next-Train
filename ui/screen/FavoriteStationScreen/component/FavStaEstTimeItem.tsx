@@ -8,7 +8,7 @@ type Props = {
     data: TrainArrivalData
 }
 
-export default function EstTimeItem({data}: Props) {
+export default function FavStaEstTimeItem({data}: Props) {
     const calMinusDiff = (dateTime?: string) => {
         return Math.ceil(moment.duration(moment(dateTime, 'YYYY-MM-DD HH:mm:ss').diff(moment())).asMinutes());
     }

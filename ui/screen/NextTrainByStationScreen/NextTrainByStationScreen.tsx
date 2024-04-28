@@ -1,34 +1,33 @@
-import {GenerateStyles} from "../../../styles/GenerateStyles";
-import {Pressable, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View} from "react-native";
 import React, {useEffect, useLayoutEffect, useRef, useState} from "react";
-import {NextTrainProps} from "../../../data/navigation/NavigationData";
-import {stationInfoData} from "../../../data/StationInfoData";
-
-import EstTimeItemContainer from "./component/EstTimeItemContainer";
-import {FontAwesomeIcon} from "@fortawesome/react-native-fontawesome";
-import {faRotate} from "@fortawesome/free-solid-svg-icons";
+import {RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View} from "react-native";
+import {IconButton} from "react-native-paper";
+import {NextTrainByStationProps} from "../../../data/navigation/NavigationData";
 import moment from "moment/moment";
-import {LineStaData, MtrRealTimeDataType} from "../../../data/type/MtrRealTimeData.type";
 import {getMTRRealTimeData} from "../../../api/MTRApi";
+import * as FavoriteStationsApi from "../../../api/FavoriteStationsApi";
+import EstTimeItemContainer from "./component/EstTimeItemContainer";
 import LoadingContainer from "../../component/LoadingContainer";
-import {ActivityIndicator} from "react-native-paper";
+import MTRLineJson from "../../../data/json/station_info.json";
+import {LineStaData, MTRRealTimeDataType} from "../../../data/type/MTRRealTimeData.type";
+import {MTRStationInfo} from "../../../data/type/MTRStationInfo.type";
 
-export default function NextTrainByStationScreen({route, navigation}: NextTrainProps) {
+export default function NextTrainByStationScreen({route, navigation}: NextTrainByStationProps) {
     const {stationCode} = route.params;
 
-    const [dataList, setDataList] = useState<MtrRealTimeDataType[] | undefined>(undefined);
+    const [isFavorite, setIsFavorite] = useState<boolean>(false);
+    const [dataList, setDataList] = useState<MTRRealTimeDataType[] | undefined>(undefined);
     const [updatedTime, setUpdateTime] = useState<string | undefined>(undefined);
     const [refreshing, setRefreshing] = useState<boolean>(false);
 
+    const mtrStationInfo = MTRLineJson as MTRStationInfo;
+
     const fetchData = async () => {
         setDataList(undefined);
-        const responseDataList: MtrRealTimeDataType[] = [];
-        for (const lineCode of stationInfoData[stationCode].line) {
-            const responseData = await getMTRRealTimeData(lineCode, stationCode);
-            responseDataList.push(responseData);
+        const apiPromises: Promise<MTRRealTimeDataType>[] = [];
+        for (const lineCode of mtrStationInfo[stationCode].line) {
+            apiPromises.push(getMTRRealTimeData(lineCode, stationCode));
         }
-        // console.log(responseDataList);
-        setDataList(responseDataList);
+        setDataList(await Promise.all(apiPromises));
         setUpdateTime(moment().format("YYYY-MM-DD HH:mm:ss"));
     }
 
@@ -38,16 +37,41 @@ export default function NextTrainByStationScreen({route, navigation}: NextTrainP
         setRefreshing(false);
     }, [])
 
+    const getIsFavorite = async () => {
+        setIsFavorite(await FavoriteStationsApi.isFavoriteStation(stationCode));
+    }
+
+    const handleFavoritePress = async () => {
+        try {
+            if (isFavorite) {
+                await FavoriteStationsApi.removeFavoriteStation(stationCode);
+                setIsFavorite(false);
+            } else {
+                await FavoriteStationsApi.addFavoriteStation(stationCode);
+                setIsFavorite(true);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+
     useLayoutEffect(() => {
+        getIsFavorite();
         navigation.setOptions({
-            title: stationInfoData[stationCode].chineseName,
+            title: mtrStationInfo[stationCode].chineseName,
+            headerRight: () => (
+                <IconButton
+                    icon={isFavorite ? "star" : "star-outline"}
+                    iconColor="white"
+                    onPress={handleFavoritePress}
+                />
+            )
         })
-    }, [navigation, stationCode]);
+    }, [navigation, stationCode, isFavorite]);
 
     useEffect(() => {
-        // setTimeout(() => {
         fetchData();
-        // }, 2000);
     }, []);
 
     const renderScrollView = () => {
@@ -60,7 +84,7 @@ export default function NextTrainByStationScreen({route, navigation}: NextTrainP
                     />
                 }>
                     {
-                        stationInfoData[stationCode].line.map((lineCode) => {
+                        mtrStationInfo[stationCode].line.map((lineCode) => {
                             let lineStationData: LineStaData;
                             if (dataList) {
                                 for (let data of dataList) {

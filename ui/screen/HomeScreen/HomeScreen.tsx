@@ -1,39 +1,36 @@
-import {SafeAreaView, View, StyleSheet, Button, Text, Image} from "react-native";
-import EstTimeItemContainer from "../NextTrainByStationScreen/component/EstTimeItemContainer";
-import {GenerateStyles} from "../../../styles/GenerateStyles";
-import {Picker} from "@react-native-picker/picker";
-import {useState} from "react";
+import {StyleSheet} from "react-native";
 import {HomeScreenProps} from "../../../data/navigation/NavigationData";
-import LinePicker from "./component/LinePicker";
-import StationPicker from "./component/StationPicker";
+import SelectStationScreen from "../SelectStationScreen/SelectStationScreen";
+import FavoriteStationScreen from "../FavoriteStationScreen/FavoriteStationScreen";
+import {DefaultTheme} from "@react-navigation/native";
+import {createMaterialBottomTabNavigator} from "react-native-paper/react-navigation";
 
-export default function HomeScreen({navigation}: HomeScreenProps) {
-    const [lineCode, setLineCode] = useState<string>("KTL");
-    const [stationCode, setStationCode] = useState<string>("DIH");
+const Tab = createMaterialBottomTabNavigator();
 
+export default function HomeScreen() {
     return (
-        <SafeAreaView style={[GenerateStyles.droidSafeArea]}>
-            <View style={styles.container}>
-                <Image
-                    style={{alignSelf: "center", marginBottom: 40}}
-                    width={200}
-                    height={200 * 400 / 500}
-                    resizeMethod="auto"
-                    source={{uri: "https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/HK_MTR_logo.svg/1000px-HK_MTR_logo.svg.png?20210510163406"}}
-                />
-
-                <LinePicker lineCode={lineCode} setLineCode={setLineCode} setStationCode={setStationCode}/>
-
-                <StationPicker lineCode={lineCode} stationCode={stationCode} setStationCode={setStationCode}/>
-
-                <Button title="搜尋" onPress={() => {
-                    navigation.navigate("NextTrain", {
-                        stationCode: stationCode
-                    })
-                }}/>
-            </View>
-        </SafeAreaView>
-    )
+        <Tab.Navigator
+            labeled={false}
+            barStyle={{
+                backgroundColor: DefaultTheme.colors.background
+            }}
+        >
+            <Tab.Screen
+                name="SelectStation"
+                component={SelectStationScreen}
+                options={{
+                    tabBarIcon: "train"
+                }}
+            />
+            <Tab.Screen
+                name="FavoriteStations"
+                component={FavoriteStationScreen}
+                options={{
+                    tabBarIcon: "star",
+                }}
+            />
+        </Tab.Navigator>
+    );
 }
 
 const styles = StyleSheet.create({

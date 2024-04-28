@@ -1,12 +1,12 @@
-interface MTRLineData {
+export interface MTRLineData {
     [key: string]: string;
 }
 
-interface MTRLineInfo {
+export interface MTRLineInfo {
     [key: string]: MTRLineItem;
 }
 
-interface MTRLineItem {
+export interface MTRLineItem {
     chineseName: string;
     englishName: string;
     colorCode: string;
