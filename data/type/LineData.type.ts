@@ -10,4 +10,5 @@ interface MTRLineItem {
     chineseName: string;
     englishName: string;
     colorCode: string;
+    stations: string[];
 }

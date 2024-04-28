@@ -27,18 +27,7 @@ export default function LinePicker({lineCode, setLineCode, setStationCode}: Prop
 
     const handleLineChange = (itemValue: string) => {
         setLineCode(itemValue);
-        for (const stationCode in stationInfoData) {
-            let isFirstStation = false;
-            stationInfoData[stationCode].line.forEach((value) => {
-                if (isFirstStation || value === itemValue) {
-                    setStationCode(stationCode);
-                    isFirstStation = true;
-                }
-            })
-            if (isFirstStation) {
-                break;
-            }
-        }
+        setStationCode(mtrLineInfo[itemValue].stations[0]);
     }
 
     return (

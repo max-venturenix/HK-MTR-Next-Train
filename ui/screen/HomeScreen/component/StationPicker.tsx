@@ -12,22 +12,29 @@ type Props = {
 
 export default function StationPicker({lineCode, stationCode, setStationCode}: Props) {
     const renderStationPickerItems = () => {
-        const stationPickerItems: JSX.Element[] = [];
-        let isFirstStation = true;
-        for (const stationCode in stationInfoData) {
-            stationInfoData[stationCode].line.forEach((value) => {
-                if (value === lineCode) {
-                    stationPickerItems.push(
-                        <Picker.Item
-                            key={stationCode}
-                            label={stationInfoData[stationCode].chineseName}
-                            value={stationCode}
-                        />
-                    );
-                }
-            })
-        }
-        return stationPickerItems;
+        // const stationPickerItems: JSX.Element[] = [];
+        // let isFirstStation = true;
+        // for (const stationCode in stationInfoData) {
+        //     stationInfoData[stationCode].line.forEach((value) => {
+        //         if (value === lineCode) {
+        //             stationPickerItems.push(
+        //                 <Picker.Item
+        //                     key={stationCode}
+        //                     label={stationInfoData[stationCode].chineseName}
+        //                     value={stationCode}
+        //                 />
+        //             );
+        //         }
+        //     })
+        // }
+        // return stationPickerItems;
+        return mtrLineInfo[lineCode].stations.map((item) => (
+            <Picker.Item
+                key={item}
+                label={stationInfoData[item].chineseName}
+                value={item}
+            />
+        ))
     }
 
     return (
