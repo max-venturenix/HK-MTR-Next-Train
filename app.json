@@ -2,7 +2,7 @@
   "expo": {
     "name": "MTR Next Train",
     "slug": "mtr-next-train",
-    "version": "1.2.0",
+    "version": "1.3.1",
     "orientation": "portrait",
     "icon": "./assets/ic_launcher.png",
     "userInterfaceStyle": "light",

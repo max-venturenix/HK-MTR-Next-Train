@@ -23,7 +23,6 @@ export default function FavoriteStationScreen({navigation}: FavoriteStationsScre
     const mtrStationInfo = MTRLineJson as MTRStationInfo;
 
     const fetchData = useCallback(async () => {
-        console.log("hihi")
         setDataList(undefined);
         const favoriteStations = await FavoriteStationsApi.getFavoriteStations();
         setFavoriteStations(favoriteStations);
@@ -45,13 +44,11 @@ export default function FavoriteStationScreen({navigation}: FavoriteStationsScre
         setRefreshing(false);
     }, [])
 
-    useEffect(() => {
-        const unsubscribe = navigation.addListener("focus", () => {
+    useFocusEffect(
+        React.useCallback(() => {
             fetchData();
-        });
-
-        return unsubscribe;
-    }, [navigation]);
+        }, [])
+    );
 
     const renderScrollView = () => {
         if (dataList) {
