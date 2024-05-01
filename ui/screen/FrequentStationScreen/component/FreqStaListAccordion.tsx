@@ -1,4 +1,4 @@
-import {List} from "react-native-paper";
+import {List, TouchableRipple} from "react-native-paper";
 import {mtrStationInfo} from "../../../../data/MTRStationInfo";
 import {mtrLineInfo} from "../../../../data/MTRLineInfo";
 import {Dimensions, Text, TouchableOpacity, View} from "react-native";
@@ -54,7 +54,7 @@ export default function FreqStaListAccordion({navigation, stationCode, dataList}
 
     const renderTable = () => {
         return (
-            <TouchableOpacity
+            <TouchableRipple
                 onLongPress={() => {
                     navigation.navigate("NextTrain", {
                         stationCode: stationCode
@@ -65,7 +65,7 @@ export default function FreqStaListAccordion({navigation, stationCode, dataList}
                     stationCode={stationCode}
                     dataList={dataList}
                 />
-            </TouchableOpacity>
+            </TouchableRipple>
         )
     }
 
