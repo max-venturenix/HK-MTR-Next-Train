@@ -1,9 +1,8 @@
 import {StyleSheet, Text, View} from "react-native";
+import TrainArrivalTimeTableRow from "./TrainArrivalTimeTableRow";
 import {DataTable} from "react-native-paper";
-import {LineStaData, MTRRealTimeDataType} from "../../../../data/type/MTRRealTimeData.type";
-import {mtrLineData, mtrLineInfo} from "../../../../data/backup/LineData";
-import FavStaEstTimeItem from "./FavStaEstTimeItem";
-import {stationInfoData} from "../../../../data/backup/StationInfoData";
+import {LineStaData} from "../../../../data/type/MTRRealTimeData";
+import {mtrLineInfo} from "../../../../data/MTRLineInfo";
 
 type Props = {
     lineCode: string,
@@ -11,7 +10,7 @@ type Props = {
     data: LineStaData
 }
 
-export default function FavStaEstTimeItemContainer({lineCode, stationCode, data}: Props) {
+export default function TrainArrivalTimeTable({lineCode, stationCode, data}: Props) {
     const renderUpTable = () => {
         if (data.UP) {
             return (
@@ -21,7 +20,12 @@ export default function FavStaEstTimeItemContainer({lineCode, stationCode, data}
                         <DataTable.Title style={styles.cellPlatform}>月台</DataTable.Title>
                         <DataTable.Title style={styles.cellTime}>下一班車</DataTable.Title>
                     </DataTable.Header>
-                    <FavStaEstTimeItem data={data.UP[0]} key={data.UP[0].time}/>
+
+                    {
+                        data.UP.map((value) => (
+                            <TrainArrivalTimeTableRow data={value} key={value.time}/>
+                        ))
+                    }
                 </DataTable>
             )
         }
@@ -31,13 +35,17 @@ export default function FavStaEstTimeItemContainer({lineCode, stationCode, data}
         if (data.DOWN) {
             return (
                 <DataTable style={{paddingHorizontal: 4}}>
-                    {/*<DataTable.Header>*/}
-                    {/*    <DataTable.Title style={styles.cellDest}>目的地</DataTable.Title>*/}
-                    {/*    <DataTable.Title style={styles.cellPlatform}>月台</DataTable.Title>*/}
-                    {/*    <DataTable.Title style={styles.cellTime}>下一班車</DataTable.Title>*/}
-                    {/*</DataTable.Header>*/}
+                    <DataTable.Header>
+                        <DataTable.Title style={styles.cellDest}>目的地</DataTable.Title>
+                        <DataTable.Title style={styles.cellPlatform}>月台</DataTable.Title>
+                        <DataTable.Title style={styles.cellTime}>下一班車</DataTable.Title>
+                    </DataTable.Header>
 
-                    <FavStaEstTimeItem data={data.DOWN[0]} key={data.DOWN[0].time}/>
+                    {
+                        data.DOWN.map((value) => (
+                            <TrainArrivalTimeTableRow data={value} key={value.time}/>
+                        ))
+                    }
                 </DataTable>
             )
         }
@@ -47,7 +55,7 @@ export default function FavStaEstTimeItemContainer({lineCode, stationCode, data}
         <View>
             <Text
                 style={[styles.lineTitle, {backgroundColor: mtrLineInfo[lineCode].colorCode}]}>
-                {stationInfoData[stationCode].chineseName} - {mtrLineInfo[lineCode].chineseName}
+                {mtrLineInfo[lineCode].chineseName}
             </Text>
 
             {

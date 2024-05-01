@@ -1,33 +1,32 @@
 import {RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View} from "react-native";
-import React, {useCallback, useEffect, useLayoutEffect, useState} from "react";
+import React, {useCallback, useState} from "react";
 import {useFocusEffect} from "@react-navigation/native";
-import * as FavoriteStationsApi from "../../../api/FavoriteStationsApi";
+import * as FrequentStationsApi from "../../../api/FrequentStationsApi";
 import {FavoriteStationsScreenProps} from "../../../data/navigation/NavigationData";
-import {LineStaData, MTRRealTimeDataType} from "../../../data/type/MTRRealTimeData.type";
-import EstTimeItemContainer from "../NextTrainByStationScreen/component/EstTimeItemContainer";
+import {LineStaData, MTRRealTimeData} from "../../../data/type/MTRRealTimeData";
 import LoadingContainer from "../../component/LoadingContainer";
-import MTRLineJson from "../../../data/json/station_info.json";
-import {MTRStationInfo} from "../../../data/type/MTRStationInfo.type";
 import {getMTRRealTimeData} from "../../../api/MTRApi";
 import moment from "moment";
-import FavStaEstTimeItemContainer from "./component/FavStaEstTimeItemContainer";
+import {mtrStationInfo} from "../../../data/MTRStationInfo";
+import {List} from "react-native-paper";
+import FreqStaListAccordion from "./component/FreqStaListAccordion";
 
 
-export default function FavoriteStationScreen({navigation}: FavoriteStationsScreenProps) {
+export default function FrequentStationScreen({navigation}: FavoriteStationsScreenProps) {
     const [favoriteStations, setFavoriteStations] = useState<string[]>([]);
 
-    const [dataList, setDataList] = useState<MTRRealTimeDataType[] | undefined>(undefined);
+    const [dataList, setDataList] = useState<MTRRealTimeData[] | undefined>(undefined);
     const [updatedTime, setUpdateTime] = useState<string | undefined>(undefined);
     const [refreshing, setRefreshing] = useState<boolean>(false);
 
-    const mtrStationInfo = MTRLineJson as MTRStationInfo;
+    const [open, setOpen] = useState<boolean>(false);
 
     const fetchData = useCallback(async () => {
         setDataList(undefined);
-        const favoriteStations = await FavoriteStationsApi.getFavoriteStations();
+        const favoriteStations = await FrequentStationsApi.getFavoriteStations();
         setFavoriteStations(favoriteStations);
 
-        const apiPromises: Promise<MTRRealTimeDataType>[] = [];
+        const apiPromises: Promise<MTRRealTimeData>[] = [];
         for (const stationCode of favoriteStations) {
             for (const lineCode of mtrStationInfo[stationCode].line) {
                 apiPromises.push(getMTRRealTimeData(lineCode, stationCode));
@@ -59,29 +58,20 @@ export default function FavoriteStationScreen({navigation}: FavoriteStationsScre
                         onRefresh={onRefresh}
                     />
                 }>
-                    {
-                        favoriteStations.map((stationCode) => {
-                            return mtrStationInfo[stationCode].line.map((lineCode) => {
-                                let lineStationData: LineStaData;
-                                if (dataList) {
-                                    for (let data of dataList) {
-                                        if (data.data[`${lineCode}-${stationCode}`]) {
-                                            lineStationData = data.data[`${lineCode}-${stationCode}`];
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                return <View key={lineCode + stationCode}>
-                                    <FavStaEstTimeItemContainer
-                                        lineCode={lineCode}
+                    <List.AccordionGroup>
+                        {
+                            favoriteStations.map((stationCode) => {
+                                return (
+                                    <FreqStaListAccordion
+                                        key={stationCode}
                                         stationCode={stationCode}
-                                        data={lineStationData!}
+                                        dataList={dataList}
+                                        navigation={navigation}
                                     />
-                                </View>
+                                )
                             })
-                        })
-                    }
+                        }
+                    </List.AccordionGroup>
                 </ScrollView>
             )
         } else {

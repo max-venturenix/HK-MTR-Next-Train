@@ -4,26 +4,24 @@ import {IconButton} from "react-native-paper";
 import {NextTrainByStationProps} from "../../../data/navigation/NavigationData";
 import moment from "moment/moment";
 import {getMTRRealTimeData} from "../../../api/MTRApi";
-import * as FavoriteStationsApi from "../../../api/FavoriteStationsApi";
-import EstTimeItemContainer from "./component/EstTimeItemContainer";
+import * as FrequentStationsApi from "../../../api/FrequentStationsApi";
+import TrainArrivalTimeTable from "./component/TrainArrivalTimeTable";
 import LoadingContainer from "../../component/LoadingContainer";
-import MTRLineJson from "../../../data/json/station_info.json";
-import {LineStaData, MTRRealTimeDataType} from "../../../data/type/MTRRealTimeData.type";
-import {MTRStationInfo} from "../../../data/type/MTRStationInfo.type";
+import {LineStaData, MTRRealTimeData} from "../../../data/type/MTRRealTimeData";
+import {mtrStationInfo} from "../../../data/MTRStationInfo";
 
 export default function NextTrainByStationScreen({route, navigation}: NextTrainByStationProps) {
     const {stationCode} = route.params;
 
     const [isFavorite, setIsFavorite] = useState<boolean>(false);
-    const [dataList, setDataList] = useState<MTRRealTimeDataType[] | undefined>(undefined);
+    const [dataList, setDataList] = useState<MTRRealTimeData[] | undefined>(undefined);
     const [updatedTime, setUpdateTime] = useState<string | undefined>(undefined);
     const [refreshing, setRefreshing] = useState<boolean>(false);
 
-    const mtrStationInfo = MTRLineJson as MTRStationInfo;
 
     const fetchData = async () => {
         setDataList(undefined);
-        const apiPromises: Promise<MTRRealTimeDataType>[] = [];
+        const apiPromises: Promise<MTRRealTimeData>[] = [];
         for (const lineCode of mtrStationInfo[stationCode].line) {
             apiPromises.push(getMTRRealTimeData(lineCode, stationCode));
         }
@@ -38,16 +36,16 @@ export default function NextTrainByStationScreen({route, navigation}: NextTrainB
     }, [])
 
     const getIsFavorite = async () => {
-        setIsFavorite(await FavoriteStationsApi.isFavoriteStation(stationCode));
+        setIsFavorite(await FrequentStationsApi.isFavoriteStation(stationCode));
     }
 
     const handleFavoritePress = async () => {
         try {
             if (isFavorite) {
-                await FavoriteStationsApi.removeFavoriteStation(stationCode);
+                await FrequentStationsApi.removeFavoriteStation(stationCode);
                 setIsFavorite(false);
             } else {
-                await FavoriteStationsApi.addFavoriteStation(stationCode);
+                await FrequentStationsApi.addFavoriteStation(stationCode);
                 setIsFavorite(true);
             }
         } catch (error) {
@@ -96,7 +94,7 @@ export default function NextTrainByStationScreen({route, navigation}: NextTrainB
                             }
 
                             return <View key={lineCode + stationCode}>
-                                <EstTimeItemContainer
+                                <TrainArrivalTimeTable
                                     lineCode={lineCode}
                                     stationCode={stationCode}
                                     data={lineStationData!}

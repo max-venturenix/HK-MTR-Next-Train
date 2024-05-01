@@ -1,9 +1,9 @@
 import {StyleSheet} from "react-native";
 import {HomeScreenProps} from "../../../data/navigation/NavigationData";
 import SelectStationScreen from "../SelectStationScreen/SelectStationScreen";
-import FavoriteStationScreen from "../FavoriteStationScreen/FavoriteStationScreen";
 import {DefaultTheme} from "@react-navigation/native";
 import {createMaterialBottomTabNavigator} from "react-native-paper/react-navigation";
+import FrequentStationScreen from "../FrequentStationScreen/FrequentStationScreen";
 
 const Tab = createMaterialBottomTabNavigator();
 
@@ -24,7 +24,7 @@ export default function HomeScreen() {
             />
             <Tab.Screen
                 name="FavoriteStations"
-                component={FavoriteStationScreen}
+                component={FrequentStationScreen}
                 options={{
                     tabBarIcon: "star",
                 }}

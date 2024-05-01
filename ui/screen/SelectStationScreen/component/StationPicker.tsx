@@ -1,10 +1,8 @@
 import React from "react";
 import {StyleSheet, Text, View} from "react-native";
 import {Picker} from "@react-native-picker/picker";
-import lineInfoJson from "../../../../data/json/line_info.json";
-import stationInfoJson from "../../../../data/json/station_info.json";
-import {MTRStationInfo} from "../../../../data/type/MTRStationInfo.type";
-import {MTRLineInfo} from "../../../../data/type/MTRLineInfo.type";
+import {mtrLineInfo} from "../../../../data/MTRLineInfo";
+import {mtrStationInfo} from "../../../../data/MTRStationInfo";
 
 type Props = {
     lineCode: string,
@@ -13,9 +11,6 @@ type Props = {
 }
 
 export default function StationPicker({lineCode, stationCode, setStationCode}: Props) {
-    const mtrLineInfo = lineInfoJson as MTRLineInfo;
-    const mtrStationInfo = stationInfoJson as MTRStationInfo;
-
     const renderStationPickerItems = () => {
         return mtrLineInfo[lineCode].stations.map((item) => (
             <Picker.Item

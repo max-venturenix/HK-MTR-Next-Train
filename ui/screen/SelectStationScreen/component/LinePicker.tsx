@@ -1,8 +1,7 @@
 import {StyleSheet, Text, View} from "react-native";
 import {Picker} from "@react-native-picker/picker";
 import React, {JSX, useState} from "react";
-import mtrLineInfoJson from "../../../../data/json/line_info.json";
-import {MTRLineInfo} from "../../../../data/type/MTRLineInfo.type";
+import {mtrLineInfo} from "../../../../data/MTRLineInfo";
 
 type Props = {
     lineCode: string
@@ -11,8 +10,6 @@ type Props = {
 }
 
 export default function LinePicker({lineCode, setLineCode, setStationCode}: Props) {
-    const mtrLineInfo = mtrLineInfoJson as MTRLineInfo;
-
     const renderLinePickerItems = () => {
         const linePickerItems: JSX.Element[] = [];
         for (const lineCode in mtrLineInfo) {

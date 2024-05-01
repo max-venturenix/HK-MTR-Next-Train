@@ -1,4 +1,4 @@
-export interface MTRRealTimeDataType {
+export interface MTRRealTimeData {
     status: number;
     message: string;
     sys_time: string;
