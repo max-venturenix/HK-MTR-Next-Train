@@ -22,7 +22,7 @@ export default function FrequentStationScreen({navigation}: FavoriteStationsScre
     const [open, setOpen] = useState<boolean>(false);
 
     const fetchData = useCallback(async () => {
-        setDataList(undefined);
+        // setDataList(undefined);
         const favoriteStations = await FrequentStationsApi.getFavoriteStations();
         setFavoriteStations(favoriteStations);
 
