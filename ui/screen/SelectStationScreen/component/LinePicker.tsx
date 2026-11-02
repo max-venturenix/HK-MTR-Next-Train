@@ -1,53 +1,19 @@
-import {StyleSheet, Text, View} from "react-native";
-import {Picker} from "@react-native-picker/picker";
-import React, {JSX, useState} from "react";
+import SelectionSheet from "../../../component/SelectionSheet";
 import {mtrLineInfo} from "../../../../data/MTRLineInfo";
 
 type Props = {
-    lineCode: string
-    setLineCode: React.Dispatch<React.SetStateAction<string>>
-    setStationCode: React.Dispatch<React.SetStateAction<string>>
-}
+    lineCode: string;
+    setLineCode: (value: string) => void;
+    setStationCode: (value: string) => void;
+};
 
 export default function LinePicker({lineCode, setLineCode, setStationCode}: Props) {
-    const renderLinePickerItems = () => {
-        const linePickerItems: JSX.Element[] = [];
-        for (const lineCode in mtrLineInfo) {
-            linePickerItems.push(
-                <Picker.Item
-                    key={lineCode}
-                    label={mtrLineInfo[lineCode].chineseName}
-                    value={lineCode}
-                />
-            )
-        }
-        return linePickerItems;
-    }
-
-    const handleLineChange = (itemValue: string) => {
-        setLineCode(itemValue);
-        setStationCode(mtrLineInfo[itemValue].stations[0]);
-    }
-
-    return (
-        <View>
-            <Text style={styles.label}>請選擇車線</Text>
-            <Picker
-                selectedValue={lineCode}
-                onValueChange={handleLineChange}
-            >
-                {
-                    renderLinePickerItems()
-                }
-            </Picker>
-        </View>
-    )
+    return <SelectionSheet label="車線" title="選擇車線" value={lineCode}
+        options={Object.entries(mtrLineInfo).map(([value, line]) => ({value, label: line.chineseName, color: line.colorCode}))}
+        onSelect={value => {
+            if (value !== lineCode) {
+                setLineCode(value);
+                setStationCode(mtrLineInfo[value].stations[0]);
+            }
+        }}/>
 }
-
-const styles = StyleSheet.create({
-        label: {
-            fontWeight: "bold",
-            fontSize: 16
-        }
-    }
-)

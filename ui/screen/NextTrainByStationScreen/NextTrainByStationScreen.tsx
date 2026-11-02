@@ -1,137 +1,58 @@
-import React, {useEffect, useLayoutEffect, useRef, useState} from "react";
-import {RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View} from "react-native";
-import {IconButton} from "react-native-paper";
-import {NextTrainByStationProps} from "../../../data/navigation/NavigationData";
-import moment from "moment/moment";
-import {getMTRRealTimeData} from "../../../api/MTRApi";
+import {useStationArrivals} from "../../hooks/useStationArrivals";
+import StationArrivals from "../../component/StationArrivals";
+import {useEffect, useState} from "react";
+import {RefreshControl, ScrollView, View} from "react-native";
+import {SafeAreaView} from "react-native-safe-area-context";
+import {router, Stack} from "expo-router";
+import {Button, IconButton, Text, useTheme} from "react-native-paper";
 import * as FrequentStationsApi from "../../../api/FrequentStationsApi";
-import TrainArrivalTimeTable from "./component/TrainArrivalTimeTable";
-import LoadingContainer from "../../component/LoadingContainer";
-import {LineStaData, MTRRealTimeData} from "../../../data/type/MTRRealTimeData";
 import {mtrStationInfo} from "../../../data/MTRStationInfo";
+import {layout} from "../../theme";
 
-export default function NextTrainByStationScreen({route, navigation}: NextTrainByStationProps) {
-    const {stationCode} = route.params;
-
-    const [isFavorite, setIsFavorite] = useState<boolean>(false);
-    const [dataList, setDataList] = useState<MTRRealTimeData[] | undefined>(undefined);
-    const [updatedTime, setUpdateTime] = useState<string | undefined>(undefined);
-    const [refreshing, setRefreshing] = useState<boolean>(false);
-
-
-    const fetchData = async () => {
-        setDataList(undefined);
-        const apiPromises: Promise<MTRRealTimeData>[] = [];
-        for (const lineCode of mtrStationInfo[stationCode].line) {
-            apiPromises.push(getMTRRealTimeData(lineCode, stationCode));
-        }
-        setDataList(await Promise.all(apiPromises));
-        setUpdateTime(moment().format("YYYY-MM-DD HH:mm:ss"));
-    }
-
-    const onRefresh = React.useCallback(async () => {
-        setRefreshing(true);
-        await fetchData();
-        setRefreshing(false);
-    }, [])
-
-    const getIsFavorite = async () => {
-        setIsFavorite(await FrequentStationsApi.isFavoriteStation(stationCode));
-    }
-
-    const handleFavoritePress = async () => {
-        try {
-            if (isFavorite) {
-                await FrequentStationsApi.removeFavoriteStation(stationCode);
-                setIsFavorite(false);
-            } else {
-                await FrequentStationsApi.addFavoriteStation(stationCode);
-                setIsFavorite(true);
-            }
-        } catch (error) {
-            console.log(error);
-        }
-    }
-
-
-    useLayoutEffect(() => {
-        getIsFavorite();
-        navigation.setOptions({
-            title: mtrStationInfo[stationCode].chineseName,
-            headerRight: () => (
-                <IconButton
-                    icon={isFavorite ? "star" : "star-outline"}
-                    iconColor="white"
-                    onPress={handleFavoritePress}
-                />
-            )
-        })
-    }, [navigation, stationCode, isFavorite]);
-
+export default function NextTrainByStationScreen({stationCode}: {stationCode: string}) {
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [savingFavorite, setSavingFavorite] = useState(false);
+    const [favoriteReady, setFavoriteReady] = useState(false);
+    const [favoriteError, setFavoriteError] = useState<string>();
+    const {colors} = useTheme();
+    const {results, refreshing, refresh} = useStationArrivals(stationCode);
     useEffect(() => {
-        fetchData();
-    }, []);
-
-    const renderScrollView = () => {
-        if (dataList) {
-            return (
-                <ScrollView refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                    />
-                }>
-                    {
-                        mtrStationInfo[stationCode].line.map((lineCode) => {
-                            let lineStationData: LineStaData;
-                            if (dataList) {
-                                for (let data of dataList) {
-                                    if (data.data[`${lineCode}-${stationCode}`]) {
-                                        lineStationData = data.data[`${lineCode}-${stationCode}`];
-                                        break;
-                                    }
-                                }
-                            }
-
-                            return <View key={lineCode + stationCode}>
-                                <TrainArrivalTimeTable
-                                    lineCode={lineCode}
-                                    stationCode={stationCode}
-                                    data={lineStationData!}
-                                />
-                            </View>
-                        })
-                    }
-                </ScrollView>
-            )
-        } else {
-            return (
-                <View>
-                    <LoadingContainer/>
-                </View>
-            )
-        }
-    }
-
-    return (
-        <SafeAreaView style={{flex: 1}}>
-            <Text style={styles.updateTime}>
-                {
-                    updatedTime ? "最後更新: " + updatedTime : "下載中..."
-                }
-            </Text>
-            {
-                renderScrollView()
-            }
-        </SafeAreaView>
-    )
+        let active = true;
+        void FrequentStationsApi.isFavoriteStation(stationCode).then(value => {
+            if (active) { setIsFavorite(value); setFavoriteReady(true); }
+        }).catch(() => { if (active) setFavoriteError("無法讀取收藏狀態，請返回後重試。"); });
+        return () => { active = false; };
+    }, [stationCode]);
+    const handleFavoritePress = async () => {
+        setSavingFavorite(true);
+        setFavoriteError(undefined);
+        try {
+            if (isFavorite) await FrequentStationsApi.removeFavoriteStation(stationCode);
+            else await FrequentStationsApi.addFavoriteStation(stationCode);
+            setIsFavorite(!isFavorite);
+        } catch {
+            setFavoriteError("無法儲存收藏，請再點選星號重試。");
+        } finally { setSavingFavorite(false); }
+    };
+    return <SafeAreaView edges={["left", "right", "bottom"]} style={[layout.screen, {backgroundColor: colors.background}]}>
+        <Stack.Screen options={{title: mtrStationInfo[stationCode].chineseName,
+            headerRight: () => <IconButton icon={isFavorite ? "star" : "star-outline"} size={24}
+                style={{width: 48, height: 48}} iconColor={colors.primary}
+                accessibilityLabel={isFavorite ? "取消收藏" : "收藏車站"}
+                accessibilityState={{selected: isFavorite, disabled: savingFavorite || !favoriteReady}}
+                disabled={savingFavorite || !favoriteReady} onPress={handleFavoritePress}/>
+        }}/>
+        <ScrollView contentContainerStyle={layout.content}
+            refreshControl={<RefreshControl refreshing={refreshing} tintColor={colors.primary} onRefresh={() => void refresh()}/> }>
+            <View style={layout.heading}>
+                <Text variant="headlineSmall" accessibilityRole="header" style={layout.grow}>即時到站</Text>
+                <Button icon="reload" loading={refreshing} disabled={refreshing} contentStyle={layout.button}
+                    onPress={() => void refresh()}>重新整理</Button>
+            </View>
+            {favoriteError && <Text accessibilityRole="alert" style={{color: colors.error}}>{favoriteError}</Text>}
+            <Button mode="outlined" icon="wheelchair-accessibility" contentStyle={layout.button}
+                onPress={() => router.push({pathname: "/station/[stationCode]/facilities", params: {stationCode}})}>查看設施狀況</Button>
+            <StationArrivals stationCode={stationCode} results={results}/>
+        </ScrollView>
+    </SafeAreaView>;
 }
-
-const styles = StyleSheet.create({
-    updateTime: {
-        backgroundColor: "lightgrey",
-        paddingVertical: 4,
-        textAlign: "center",
-        color: "black",
-    }
-})

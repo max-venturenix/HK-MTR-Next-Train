@@ -2,18 +2,10 @@
   "expo": {
     "name": "MTR Next Train",
     "slug": "mtr-next-train",
-    "version": "1.4.0",
-    "orientation": "portrait",
+    "version": "2.0.0",
+    "orientation": "default",
     "icon": "./assets/ic_launcher.png",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/ic_launcher.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true
     },
@@ -22,15 +14,33 @@
         "foregroundImage": "./assets/ic_launcher.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.sps99133.mtrnexttrain"
+      "package": "com.sps99133.mtrnexttrain",
+      "versionCode": 2
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single"
     },
     "extra": {
       "eas": {
         "projectId": "9e453fc8-8561-4f5e-ba81-5952667393f7"
       }
+    },
+    "scheme": "mtr-next-train",
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/ic_launcher.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }

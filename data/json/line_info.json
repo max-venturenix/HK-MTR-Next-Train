@@ -38,6 +38,7 @@
       "TWO",
       "TAP",
       "UNI",
+      "RAC",
       "FOT",
       "SHT",
       "TAW",
@@ -178,6 +179,15 @@
       "WCH",
       "LET",
       "SOH"
+    ]
+  },
+  "DRL": {
+    "chineseName": "迪士尼綫",
+    "englishName": "Disneyland Resort Line",
+    "colorCode": "#AD5E99",
+    "stations": [
+      "SUN",
+      "DIS"
     ]
   }
 }

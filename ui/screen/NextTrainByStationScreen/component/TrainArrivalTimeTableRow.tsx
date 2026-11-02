@@ -1,50 +1,22 @@
-import {StyleSheet, Text, View} from "react-native";
-import {DataTable} from "react-native-paper";
-import moment from "moment";
+import {View} from "react-native";
+import {Text, useTheme} from "react-native-paper";
+import {formatArrival} from "../../../../data/arrivalTime";
 import {TrainArrivalData} from "../../../../data/type/MTRRealTimeData";
 import {mtrStationInfo} from "../../../../data/MTRStationInfo";
 
-type Props = {
-    data: TrainArrivalData
+export default function TrainArrivalTimeTableRow({data, prominent = false}: {data: TrainArrivalData; prominent?: boolean}) {
+    const {colors} = useTheme();
+    return <View style={{paddingVertical: prominent ? 16 : 12, gap: 8,
+        borderTopWidth: prominent ? 0 : 1, borderColor: colors.outlineVariant}}>
+        <View style={{flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignItems: "baseline", gap: 12}}>
+            <Text variant={prominent ? "titleLarge" : "bodyLarge"} style={{flexShrink: 1}}>
+                往 {mtrStationInfo[data.dest]?.chineseName ?? data.dest}{data.route === "RAC" ? "（經馬場）" : ""}
+            </Text>
+            <Text variant={prominent ? "headlineMedium" : "titleMedium"}
+                style={{color: prominent ? colors.primary : colors.onSurface, fontVariant: ["tabular-nums"]}}>{formatArrival(data)}</Text>
+        </View>
+        <Text variant="bodyMedium" style={{color: colors.onSurfaceVariant}}>
+            {data.plat} 號月台{data.timetype === "A" ? " · 到站" : data.timetype === "D" ? " · 開出" : ""}
+        </Text>
+    </View>;
 }
-
-export default function TrainArrivalTimeTableRow({data}: Props) {
-    const calMinusDiff = (dateTime?: string) => {
-        return Math.ceil(moment.duration(moment(dateTime, 'YYYY-MM-DD HH:mm:ss').diff(moment())).asMinutes());
-    }
-
-    const renderEstTime = () => {
-        const estTime = calMinusDiff(data.time);
-        if (estTime > 1) {
-            return estTime;
-        } else if (estTime == 1) {
-            return "正在抵達";
-        } else {
-            return "正在離開";
-        }
-    }
-
-    return (
-        <DataTable.Row centered>
-            <DataTable.Cell
-                style={styles.cellDest}>{mtrStationInfo[data.dest] ? mtrStationInfo[data.dest].chineseName : data.dest}</DataTable.Cell>
-            <DataTable.Cell style={styles.cellPlatform}>{data.plat}</DataTable.Cell>
-            <DataTable.Cell style={styles.cellTime}>{renderEstTime()}</DataTable.Cell>
-        </DataTable.Row>
-    )
-}
-
-const styles = StyleSheet.create({
-    cellDest: {
-        justifyContent: "flex-start",
-        alignItems: "center"
-    },
-    cellPlatform: {
-        justifyContent: "center",
-        alignItems: "center"
-    },
-    cellTime: {
-        justifyContent: "flex-end",
-        alignItems: "center"
-    }
-})

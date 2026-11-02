@@ -1,6 +1,6 @@
+import {formatArrival} from "../../../../data/arrivalTime";
 import {StyleSheet, Text, View} from "react-native";
 import {DataTable} from "react-native-paper";
-import moment from "moment";
 import {TrainArrivalData} from "../../../../data/type/MTRRealTimeData";
 import {mtrStationInfo} from "../../../../data/MTRStationInfo";
 import {mtrLineInfo} from "../../../../data/MTRLineInfo";
@@ -12,20 +12,6 @@ type Props = {
 }
 
 export default function FreqStaTrainArrivalTableRow({lineCode, data}: Props) {
-    const calMinusDiff = (dateTime?: string) => {
-        return Math.ceil(moment.duration(moment(dateTime, 'YYYY-MM-DD HH:mm:ss').diff(moment())).asMinutes());
-    }
-
-    const renderEstTime = () => {
-        const estTime = calMinusDiff(data.time);
-        if (estTime > 1) {
-            return estTime;
-        } else if (estTime == 1) {
-            return "正在抵達";
-        } else {
-            return "正在離開";
-        }
-    }
 
     return (
         <DataTable.Row centered>
@@ -43,9 +29,9 @@ export default function FreqStaTrainArrivalTableRow({lineCode, data}: Props) {
                 </Text>
             </DataTable.Cell>
             <DataTable.Cell
-                style={styles.cellDest}>{mtrStationInfo[data.dest] ? mtrStationInfo[data.dest].chineseName : data.dest}</DataTable.Cell>
+                style={styles.cellDest}>{mtrStationInfo[data.dest] ? mtrStationInfo[data.dest].chineseName : data.dest}{data.route === "RAC" ? "（經馬場）" : ""}</DataTable.Cell>
             <DataTable.Cell style={styles.cellPlatform}>{data.plat}</DataTable.Cell>
-            <DataTable.Cell style={styles.cellTime}>{renderEstTime()}</DataTable.Cell>
+            <DataTable.Cell style={styles.cellTime}>{formatArrival(data)}</DataTable.Cell>
         </DataTable.Row>
     )
 }

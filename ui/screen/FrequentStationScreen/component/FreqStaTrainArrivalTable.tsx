@@ -1,4 +1,4 @@
-import {StyleSheet, Text, Touchable, TouchableOpacity, View} from "react-native";
+import {StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {DataTable, List} from "react-native-paper";
 import {LineStaData, MTRRealTimeData} from "../../../../data/type/MTRRealTimeData";
 import FreqStaTrainArrivalTableRow from "./FreqStaTrainArrivalTableRow";
@@ -23,12 +23,12 @@ export default function FreqStaTrainArrivalTable({stationCode, dataList}: Props)
                 {
                     mtrStationInfo[stationCode].line.map((lineCode) => {
                         for (let data of dataList) {
-                            if (data.data[`${lineCode}-${stationCode}`]) {
-                                const lineStationData = data.data[`${lineCode}-${stationCode}`];
+                            if (data.data?.[`${lineCode}-${stationCode}`]) {
+                                const lineStationData = data.data?.[`${lineCode}-${stationCode}`];
                                 return (
                                     <>
-                                        {lineStationData.UP && <FreqStaTrainArrivalTableRow lineCode={lineCode} data={lineStationData.UP[0]}/>}
-                                        {lineStationData.DOWN && <FreqStaTrainArrivalTableRow lineCode={lineCode} data={lineStationData.DOWN[0]}/>}
+                                        {lineStationData?.UP?.[0] && <FreqStaTrainArrivalTableRow lineCode={lineCode} data={lineStationData.UP[0]}/>}
+                                        {lineStationData?.DOWN?.[0] && <FreqStaTrainArrivalTableRow lineCode={lineCode} data={lineStationData.DOWN[0]}/>}
                                     </>
                                 )
                             }

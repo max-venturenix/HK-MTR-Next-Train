@@ -5,16 +5,14 @@ import {Dimensions, Text, TouchableOpacity, View} from "react-native";
 import FreqStaTrainArrivalTable from "./FreqStaTrainArrivalTable";
 import React from "react";
 import {MTRRealTimeData} from "../../../../data/type/MTRRealTimeData";
-import {RootStackParamList} from "../../../../data/navigation/NavigationData";
-import {NativeStackNavigationProp} from "@react-navigation/native-stack";
+import {router} from "expo-router";
 
 type Props = {
-    navigation: NativeStackNavigationProp<RootStackParamList, "FavoriteStations", undefined>,
     stationCode: string,
     dataList: MTRRealTimeData[]
 }
 
-export default function FreqStaListAccordion({navigation, stationCode, dataList}: Props) {
+export default function FreqStaListAccordion({stationCode, dataList}: Props) {
     const renderTitle = () => {
         return (
             <View style={{
@@ -56,9 +54,7 @@ export default function FreqStaListAccordion({navigation, stationCode, dataList}
         return (
             <TouchableRipple
                 onLongPress={() => {
-                    navigation.navigate("NextTrain", {
-                        stationCode: stationCode
-                    })
+                    router.push({pathname: "/station/[stationCode]", params: {stationCode}})
                 }}
             >
                 <FreqStaTrainArrivalTable

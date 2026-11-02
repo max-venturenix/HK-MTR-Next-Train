@@ -45,7 +45,8 @@
   "SUN": {
     "code": "SUN",
     "line": [
-      "TCL"
+      "TCL",
+      "DRL"
     ],
     "englishName": "Sunny Bay",
     "chineseName": "欣澳"
@@ -796,5 +797,21 @@
     ],
     "englishName": "",
     "chineseName": ""
+  },
+  "DIS": {
+    "code": "DIS",
+    "line": [
+      "DRL"
+    ],
+    "englishName": "Disneyland Resort",
+    "chineseName": "迪士尼"
+  },
+  "RAC": {
+    "code": "RAC",
+    "line": [
+      "EAL"
+    ],
+    "englishName": "Racecourse",
+    "chineseName": "馬場"
   }
 }
