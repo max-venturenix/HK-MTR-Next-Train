@@ -8,7 +8,7 @@ The project uses Expo SDK 58, React Native 0.88, React 19.3, and Expo Router.
 Expo-compatible native module versions take precedence over independent npm latest tags,
 so JavaScript and native binaries remain compatible. npm records exact resolutions in the lockfile.
 
-`app/_layout.tsx` owns the root Stack, system-selected light/dark Paper theme,
+`app/_layout.tsx` owns the root Stack, preference-selected light/dark Paper theme,
 icon provider and status bar. Shared tokens live in `ui/theme.ts`. Native appearance
 uses SDK-matched `expo-system-ui`; app configuration permits landscape. Rebuild native
 clients after these configuration changes.
@@ -22,6 +22,7 @@ Web uses a centered content column of at most 720 units.
 | `/` | FrequentStationScreen | Saved stations, first saved station initially expanded |
 | `/search` | SelectStationScreen | Select line/station and view arrivals |
 | `/favorites` | Redirect | Compatibility redirect to `/` |
+| `/settings` | SettingsScreen | Appearance preference and future notification placeholder |
 | `/station/[stationCode]` | NextTrainByStationScreen | Arrivals and favorite toggle |
 | `/facilities` | FacilityOutageScreen | Facility notices or official-site web fallback |
 | `/station/[stationCode]/facilities` | FacilityOutageScreen | Station-scoped facility notices |
@@ -54,6 +55,15 @@ Station detail instances are keyed by station code; request generations discard 
 `api/FrequentStationsApi.ts` uses AsyncStorage key `favorite_station_list`, storing a JSON
 array of station-code strings. Keep that key and representation compatible across upgrades.
 Paper renders controls and typography; Expo vector icons supply Paper icons, including the train and star tab icons.
+
+`AppearanceProvider` owns the session appearance and resolves `system`, `light`, or `dark`
+against the device color scheme. AsyncStorage key `appearance_preference` stores that string
+independently of favorites. Missing/invalid values use `system`; read failures use system
+with feedback, and save failures keep the current session choice with retry guidance.
+Controls wait for the initial read and serialize changes while saving. Theme changes update
+the existing navigation tree rather than remounting it. Settings is pushed from the Favorites
+header, preserving the expanded station underneath. Its notification switch is disabled/off;
+there is no notification storage, permission request, or notification module.
 
 This is an Expo managed project: native projects are generated when needed, not maintained
 in this repository. `eas.json` holds existing build profiles; `app.json` holds app identity and

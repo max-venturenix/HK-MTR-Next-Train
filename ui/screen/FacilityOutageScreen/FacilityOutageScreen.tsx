@@ -45,9 +45,10 @@ export default function FacilityOutageScreen({stationCode}: {stationCode?: strin
                     <Text variant="bodyMedium" style={{color: colors.onSurfaceVariant}}>港鐵資料更新：{formatFacilityTimestamp(feed?.updatedAt)}</Text>
                     <Button icon="reload" mode="outlined" loading={refreshing} disabled={refreshing}
                         contentStyle={layout.button} onPress={() => void refresh()}>重新整理</Button>
+                    {/* Pad the label inside Paper’s ripple so the pressable itself reaches 48 dp. */}
                     <SegmentedButtons value={filter} onValueChange={setFilter} buttons={[
-                        {value: "accessible", label: "無障礙", accessibilityLabel: "只顯示無障礙設施", style: {minHeight: 48}},
-                        {value: "all", label: "全部", accessibilityLabel: "顯示全部設施", style: {minHeight: 48}}
+                        {value: "accessible", label: "無障礙", accessibilityLabel: "只顯示無障礙設施", labelStyle: {paddingVertical: 5}},
+                        {value: "all", label: "全部", accessibilityLabel: "顯示全部設施", labelStyle: {paddingVertical: 5}}
                     ]}/>
                     {!stationCode && <Searchbar placeholder="搜尋車站名稱或編號" accessibilityLabel="搜尋車站名稱或編號"
                         value={query} onChangeText={setQuery}/>}

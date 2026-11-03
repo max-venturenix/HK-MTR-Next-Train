@@ -2,7 +2,7 @@ import {RefreshControl, ScrollView, View} from "react-native";
 import {useCallback, useRef, useState} from "react";
 import {useFocusEffect, router, useIsFocused} from "expo-router";
 import {SafeAreaView} from "react-native-safe-area-context";
-import {ActivityIndicator, Button, Icon, Text, TouchableRipple, useTheme} from "react-native-paper";
+import {ActivityIndicator, Button, Icon, IconButton, Text, TouchableRipple, useTheme} from "react-native-paper";
 import * as FrequentStationsApi from "../../../api/FrequentStationsApi";
 import {mtrStationInfo} from "../../../data/MTRStationInfo";
 import {useStationArrivals} from "../../hooks/useStationArrivals";
@@ -53,10 +53,14 @@ export default function FrequentStationScreen() {
     return <SafeAreaView edges={["top", "left", "right"]} style={[layout.screen, {backgroundColor: colors.background, display: focused ? "flex" : "none"}]}>
         <ScrollView contentContainerStyle={layout.content}
             refreshControl={<RefreshControl refreshing={busy} tintColor={colors.primary} onRefresh={() => void reload()}/> }>
-            <View style={layout.heading}>
-                <Text variant="headlineLarge" accessibilityRole="header" style={layout.grow}>收藏車站</Text>
+            <View style={[layout.heading, {flexWrap: "wrap"}]}>
+                <Text variant="headlineLarge" accessibilityRole="header" style={[layout.grow, {minWidth: 160}]}>收藏車站</Text>
+                <View style={{flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 8}}>
                 <Button icon="reload" loading={busy} disabled={busy} contentStyle={layout.button}
                     onPress={() => void reload()}>重新整理</Button>
+                <IconButton icon="cog-outline" accessibilityLabel="設定" style={{width: 48, height: 48, margin: 0}}
+                    onPress={() => router.push("/settings")}/>
+                </View>
             </View>
             <Text variant="bodyLarge" style={{color: colors.onSurfaceVariant}}>常搭的車站，下一班車一眼掌握。</Text>
             {error && <Text accessibilityRole="alert" style={{color: colors.error}}>{error}</Text>}

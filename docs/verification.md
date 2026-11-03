@@ -22,6 +22,15 @@ native binaries or validate device interactions. No automated test framework or 
 Run on Android, iOS, and web, recording each platform actually tested:
 
 - Open favorites: Traditional Chinese controls and labeled Material star/train tabs. Check system light and dark appearances.
+- From Favorites, open 設定 using the gear beside refresh. Select 跟隨系統, 淺色 and 深色;
+  verify screens, navigation and status bar update immediately. Restart/reload to check persistence.
+  Change device appearance: only 跟隨系統 should respond. Return with Back and verify the same
+  expanded (or collapsed) favorite remains. Check header fit at narrow widths and large text sizes.
+- In Settings, verify 允許通知 is off/disabled, explains 通知功能尚未開放, and never requests
+  permission. Check radio labels/checked states with a screen reader and web keyboard controls.
+- With invalid/missing `appearance_preference`, expect system appearance. Simulate storage
+  failures: read failure uses system with feedback; save failure keeps the session choice with
+  feedback and allows reselecting to retry. Preserve `favorite_station_list` throughout.
 - Open search, select a line and station; search opens the correct named station with arrivals.
 - Pull to refresh; arrivals and update timestamp reload.
 - Toggle the header star, return to favorites, and confirm the saved list updates.
@@ -51,6 +60,62 @@ Distinguish source inspection from runtime observations and flag checks that cou
 Record command, result, tested platform/device, and any failure. Distinguish an unavailable
 network or simulator from a passing check. Include actionable remaining checks in the handoff;
 never mark unexecuted manual scenarios as passed.
+
+## Settings and appearance — 2026-11-03
+
+- `npm run check`: passed TypeScript, dependency alignment and all 20 Doctor checks with
+  network access. Initial checks encountered stale generated route types (refreshed by Expo
+  start) and restricted-network Doctor metadata failures; both resolved on the final run.
+- `npm run export:all`: passed Android, iOS and web after final UI changes.
+- `git diff --check`: passed. No new dependencies or test framework.
+- Interactive browser verification used the Expo web development server at desktop and
+  320×640. Verified all three choices, saved light/dark choices after reload, Space/Enter
+  activation, visible focus, a single labeled checked-state radio per choice, disabled/off
+  notification control, and theme changes reaching the Favorites screen/header/tab bar.
+  Returning from Settings preserved a deliberately collapsed favorite; the original expanded
+  state was restored after verification. The small-width header now wraps actions below its title.
+- Impeccable audit: native source review and web source/runtime review of Settings, appearance
+  provider and affected Favorites header. No remaining confirmed in-scope P0–P3 findings.
+  Duplicate radio semantics/missing web checked states and compressed header text found during
+  review were corrected. Controls use Material feedback, semantic themes, safe areas, wrapping
+  text, 48+ unit targets, and existing Reduce Motion handling. Body contrast: light primary
+  15.91:1, light secondary 6.64:1, dark primary 13.08:1, dark secondary 10.70:1.
+- React best-practices review confirmed stable component identity, cleaned-up appearance
+  subscription/load effects, serialized persistence, and no added dependency or polling work.
+  Context7 Expo SDK 58 and installed Paper 5.15.3/RN 0.88.1 sources informed routing, radio
+  semantics and system-scheme subscription. RN Context7 search returned unrelated compatibility
+  examples, so the installed `useColorScheme` implementation supplied the subscription evidence.
+- Not executed in the initial pass: native device/simulator runtime, live OS appearance changes, large system text,
+  landscape, VoiceOver/TalkBack, invalid-storage or storage-failure injection. Complete these
+  manual scenarios before release; platform bundle exports do not establish native behavior.
+
+### Android emulator follow-up — 2026-11-03
+
+Tested the running `Samsung_Galaxy_S26_Ultra_API_36` emulator (`emulator-5554`),
+Android API 36, using Expo Go 58.0.5 and the current local Expo development server.
+ADB interaction was explicitly authorized. No application source changes were needed.
+
+- Passed: Settings opens from the Favorites gear; all three radio choices respond immediately
+  and native accessibility metadata exposes the selected choice. Dark appearance persisted
+  after force-stopping/reopening Expo Go.
+- Passed: Light overrides a dark OS setting; follow-system renders dark under OS dark and
+  returns to light when the OS changes to light. Screenshots confirmed theme background colors
+  `#11171D` and `#F5F6F7`; status-bar icons remain legible in both themes.
+- Passed: notification control reports disabled and unchecked; tapping it leaves Settings
+  unchanged and presents no permission prompt.
+- Passed: Settings and the Favorites header fit at 150% system text. Appearance controls
+  retain full labels, notification copy wraps without overlap, and content respects system insets.
+- Passed: temporarily favorited Diamond Hill, expanded it, opened Settings, selected dark,
+  then used Android Back. Diamond Hill remained expanded with live arrivals and themed tabs.
+- Restored and read back OS night mode `no` and font scale `1.0`; selected follow-system and
+  removed the temporary Favorite, confirming the original empty saved list.
+- Impeccable native runtime review found no new Settings-specific P0–P3 issues. The inspected
+  AndroidRuntime/ReactNativeJS error-log tail was empty. Expo Go recreated the experience on
+  system configuration changes; startup required waiting/reopening before continuing.
+
+Remaining: iOS, physical devices, TalkBack traversal, landscape/tablet layouts and injected
+storage failures were not tested in this follow-up. Native screenshots are in
+`/private/tmp/mtr-native-*.png` (dark, light override, system light/dark and 150% text).
 
 ## Migration verification — 2026-10-30
 
@@ -292,3 +357,26 @@ dark with large text, landscape, and final restored state).
 - Local APK builds use the generated template's debug signing key for installation testing.
   Production distribution and upgrades from differently signed builds need the original
   production signing key.
+
+### Facility toggle touch-area fix — 2026-11-03
+
+Resolved the P2 finding above by replacing the outer-only minimum height with vertical
+label padding inside Paper's TouchableRipple. The actual clickable target now measures
+144 physical pixels / 48 dp at the emulator's 480 dpi, rather than 114 pixels / 38 dp.
+Paper 5.15.3 source/types were checked against Context7's SegmentedButtons guidance.
+
+Android retest: same Android 16 / API 36 phone emulator with SDK 58 Expo Go, current
+project served by Expo on port 8081. UIAutomator measured both targets at 48 dp. For both
+filters, taps at the original failing y=738, the new bottom edge y=751, top edge y=611,
+and center correctly switched between three accessibility notices and 20 total notices.
+At font scale 1.5, both targets measured 54 dp and bottom-edge taps still switched correctly.
+Native dark-appearance screenshots at default/150% text showed readable labels and intact
+Material styling. The existing app appearance override was preserved; light appearance
+was not separately exercised in this retest. System night mode and font scale were restored
+to their original values (no / 1.0); rotation was unchanged.
+
+`npm run typecheck`, `node scripts/verify-facilities.cjs`, `node scripts/verify-api.cjs`
+and `git diff --check` passed. No dependency or route changes were made. Native Impeccable
+review of the affected toggle found the reported target-size issue resolved, with labels,
+filter results and text scaling preserved. TalkBack and iOS runtime remain untested.
+Evidence: UI dumps and emulator screenshots in `/tmp/mtr-toggle-retest/`.

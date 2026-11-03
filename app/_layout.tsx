@@ -1,15 +1,21 @@
 import {Stack} from "expo-router";
 import {StatusBar} from "expo-status-bar";
-import {AccessibilityInfo, useColorScheme} from "react-native";
+import {AccessibilityInfo} from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import {useEffect, useState} from "react";
 import {PaperProvider, ThemeProvider} from "react-native-paper";
 import {darkTheme, lightTheme} from "../ui/theme";
+import {AppearanceProvider, useAppearance} from "../ui/context/AppearanceContext";
 
 export const unstable_settings = {anchor: "(tabs)"};
 
 export default function RootLayout() {
-    const baseTheme = useColorScheme() === "dark" ? darkTheme : lightTheme;
+    return <AppearanceProvider><ThemedLayout/></AppearanceProvider>;
+}
+
+function ThemedLayout() {
+    const {dark} = useAppearance();
+    const baseTheme = dark ? darkTheme : lightTheme;
     const [reduceMotion, setReduceMotion] = useState(false);
     useEffect(() => {
         let active = true;
@@ -29,6 +35,7 @@ export default function RootLayout() {
                 <Stack.Screen name="(tabs)" options={{headerShown: false}}/>
                 <Stack.Screen name="station/[stationCode]" options={{title: "車站"}}/>
                 <Stack.Screen name="favorites" options={{headerShown: false}}/>
+                <Stack.Screen name="settings" options={{title: "設定", headerBackTitle: "收藏"}}/>
             </Stack>
             </ThemeProvider>
         </PaperProvider>
