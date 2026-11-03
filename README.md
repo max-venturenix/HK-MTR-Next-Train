@@ -4,7 +4,11 @@ An Expo / React Native app for Hong Kong MTR arrivals, with station search,
 live arrival groups, and persistent favorite stations. Favorites open first; station search
 is available from the labeled bottom navigation. Settings opens from the gear beside refresh
 on Favorites. Appearance follows the system by default, with saved light/dark overrides.
-Settings also shows a disabled notification switch for a future feature. The interface uses Traditional Chinese. The 設施 tab shows native facility outage notices
+Settings offers opt-in Android accessibility facility outage alerts for favorites or all stations.
+Existing outages establish a silent baseline, and new outages notify once per station per check.
+Background checks request a 15-minute minimum interval and resume after normal device reboot.
+Android Settings includes 測試通知 and 10 秒後測試通知 buttons, including when alerts are off.
+Android battery/network restrictions can delay checks. Rebuild the native app for this feature. The interface uses Traditional Chinese. The 設施 tab shows native facility outage notices
 with accessibility filtering; station details also link to station-specific notices. Web links
 to MTR’s official facility information.
 

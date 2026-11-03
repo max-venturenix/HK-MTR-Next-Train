@@ -380,3 +380,119 @@ and `git diff --check` passed. No dependency or route changes were made. Native 
 review of the affected toggle found the reported target-size issue resolved, with labels,
 filter results and text scaling preserved. TalkBack and iOS runtime remain untested.
 Evidence: UI dumps and emulator screenshots in `/tmp/mtr-toggle-retest/`.
+
+## Android facility alert acceptance
+
+Use a newly built installed Android app containing the notification/background modules.
+
+- Tap 測試通知 with monitoring off and on. Expect one immediate Chinese test notification
+  per tap using the facility alert channel. Verify permission requests/denial feedback,
+  a loading indicator, and unchanged monitoring preferences and outage history.
+- Tap 10 秒後測試通知, confirm scheduling feedback, then leave the app. Expect one test
+  notification after 10 seconds. It must use a one-shot trigger and preserve monitoring settings.
+- Both test notifications show 樂富站升降機停用（測試） and describe a simulated lift outage.
+- After rebuilding Android, check the train glyph in the status bar with the shade closed.
+  Expand the shade and verify the glyph is on the left of test and facility notifications
+  and the right-hand app thumbnail is gone.
+- Fresh install shows alerts off and 收藏車站 selected. An empty bookmark list explains how
+  monitoring starts. iOS/web show Android availability information.
+- Enable with permission allowed, denied and permanently denied. Confirm Settings recovery
+  link opens Android app settings and returning refreshes permission status.
+- The first successful check silently baselines current outages. Two new accessible outages
+  at one station produce one Chinese notification naming both. Other stations alert separately.
+- Dismiss and run another check, reopen and reboot. An ongoing outage stays silent.
+  Message/timestamp changes stay silent. A facility absent from one valid feed then returning
+  alerts again. Offline/invalid feeds preserve history and retry later.
+- Add/remove/re-add bookmarks and switch scopes. Newly monitored stations baseline silently,
+  while previously monitored stations still alert for subsequent new outages.
+- Tap a facility outage alert and each Settings test notification. Verify the main 設施 tab
+  opens when the app is running, in the background, or starting from a closed state.
+- Disable alerts and verify the WorkManager registration is removed. Re-enable and confirm
+  existing outages establish fresh silent baselines.
+- After enabling, reboot without reopening. Verify a headless check executes with network
+  available. Android schedules at least 15 minutes apart and can defer for power/network.
+  Force-stop requires reopening the app before work resumes.
+- Inspect Settings on a phone/tablet, both appearances and increased font scale. Use TalkBack
+  to check the switch's label/state, scope radio selection, errors and system-settings button.
+
+The monitor reserves a station's snapshot before submitting its notification to avoid repeats
+across process death. An interruption between reservation and submission may lose that alert.
+Mocked assertions and exports do not prove native presentation or reboot execution.
+
+### Facility alert verification, 2026-11-03
+
+`npm run check` passed all 20 Expo Doctor checks. `npm run export:all` exported Android,
+iOS and web. Both existing API/facility verification scripts passed, including the new
+Android monitor assertions. A generated temporary Android project built successfully with
+`:app:assembleDebug` and the APK was installed on an Android 16 / API 36 phone emulator.
+
+Native checks exercised the permission prompt, denial, recovery via permission grant,
+empty-favorites copy, all-stations selection, saved preferences, background job registration,
+and a forced WorkManager execution that completed successfully and rescheduled at 15 minutes.
+Two staged station-baseline changes against the real feed produced separate Chinese station
+notifications. Tapping the individual 油塘 alert opened 油塘設施 with its lift notice.
+Reboot restored WorkManager scheduling. Without opening the app, a forced restored job
+completed successfully with the launcher still foregrounded and no duplicate notifications.
+These forced executions verify the headless path. Natural 15-minute timing remains pending.
+
+Impeccable native review found and fixed a blocking Android `status` accessibility-role
+crash in Settings using native polite live regions. Local notification content uses
+`sound: true`, since this SDK build treated the string `default` as a missing custom sound.
+The final notification had high importance and no SILENT flag. Native Settings captures in
+light appearance/default text and dark appearance/150% text showed wrapping labels and intact
+Material styling. Display settings were restored to night mode off and font scale 1.0.
+Native audit scores are provisional, 17/20, with accessibility 3, performance 3, theming 4,
+platform conformance 4 and adaptivity 3. No remaining blocking UI issue was identified in
+these reviewed states. TalkBack speech, tablet/orientation layouts, audible playback and
+natural interval scheduling still need device acceptance. iOS/web were exported only.
+Screenshots and UI dumps are in `/tmp/mtr-alert-qa/`; the debug APK is under
+`/tmp/mtr-alert-native/android/app/build/outputs/apk/debug/`.
+
+Cancellation was verified through the native switch. The saved state changed to disabled and
+the WorkManager job disappeared. The switch exposed Android Switch/checkable/checked semantics
+and a 440 by 64 dp clickable row. Test monitoring was left off.
+
+### Notification test buttons, 2026-11-03
+
+Added 測試通知 and 30 秒後測試通知 to Android Settings. Both delivered through the existing
+high-importance channel on the installed Android 16 / API 36 emulator with monitoring off.
+The delayed test was absent at 25 seconds and appeared after the requested 30-second delay
+while the app was backgrounded. Stored state remained disabled/favorites with empty history.
+TypeScript, facility assertions, whitespace checks and Android/iOS/web exports passed.
+The focused Impeccable native review found no blocking issue in the rendered buttons,
+with Paper feedback, themed colors and 48 dp targets. TalkBack and other screen sizes were
+not exercised for this addition. Evidence is in `/tmp/mtr-alert-qa/test-buttons.png`.
+
+### Notification channel error fix, 2026-11-03
+
+The reported error was `expo-notifications: Custom sound 'default' not found in native app`.
+The installed SDK treats an explicit channel sound string as a bundled resource filename.
+Channel creation now omits `sound`, which selects Android's default notification sound.
+Notification content continues to use `sound: true`. A regression assertion checks the channel
+options. After restarting the installed Android app, both test buttons delivered notifications,
+including delayed delivery while backgrounded, with zero fresh Expo/ReactNativeJS errors.
+TypeScript, facility assertions, whitespace checks and all-platform exports passed.
+Evidence is in `/tmp/mtr-alert-qa/sound-retest.log` and `sound-retest-notifications.txt`.
+
+### Earlier right-side notification icon trial, 2026-11-03
+
+Configured the Expo notifications plugin's `largeIcon` with the existing app icon.
+Generated manifest metadata and density-specific notification icon resources were verified.
+`npm run check` passed all 20 Doctor checks, facility assertions and all-platform exports
+passed, and the rebuilt debug APK installed successfully. On Android 16 / API 36, the
+Lok Fu test notification visibly showed the full-color train app icon in its card.
+Android reported a bitmap large icon. The focused native visual audit found the existing
+app asset recognizable and correctly placed by the system. Evidence is in
+`/tmp/mtr-alert-qa/app-icon-notification.png`. Native rebuilding is required on other devices.
+
+### Android small notification icon, 2026-11-03
+
+On the rebuilt Android 16 emulator app, tapping 測試通知 showed the monochrome train
+on the left of the Lok Fu heads-up banner and expanded card. After the banner closed,
+the train appeared beside the clock in the status bar. The card had no right-hand image
+and the Android notification record reported `android.largeIcon=null`.
+
+On Android 16, tapping the immediate Lok Fu test notification opened the main 設施 tab
+both from Settings and after the app process was killed in the background. Tapping the
+delayed test from the launcher also opened the tab. Each check found 設施服務狀況 with
+the bottom tab bar visible.

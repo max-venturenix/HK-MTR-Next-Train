@@ -1,11 +1,13 @@
-import {Stack} from "expo-router";
+import {router, Stack} from "expo-router";
 import {StatusBar} from "expo-status-bar";
-import {AccessibilityInfo} from "react-native";
+import {AccessibilityInfo, AppState} from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import {useEffect, useState} from "react";
 import {PaperProvider, ThemeProvider} from "react-native-paper";
 import {darkTheme, lightTheme} from "../ui/theme";
 import {AppearanceProvider, useAppearance} from "../ui/context/AppearanceContext";
+
+import {initializeFacilityNotifications, subscribeToFacilityNotifications} from "../services/facilityNotifications";
 
 export const unstable_settings = {anchor: "(tabs)"};
 
@@ -18,10 +20,14 @@ function ThemedLayout() {
     const baseTheme = dark ? darkTheme : lightTheme;
     const [reduceMotion, setReduceMotion] = useState(false);
     useEffect(() => {
+        const initialize = () => { void initializeFacilityNotifications().catch(error => console.warn("Facility monitor", error)); };
+        initialize();
+        const appState = AppState.addEventListener("change", state => { if (state === "active") initialize(); });
+        const unsubscribe = subscribeToFacilityNotifications(() => router.navigate("/facilities"));
         let active = true;
         void AccessibilityInfo.isReduceMotionEnabled().then(value => { if (active) setReduceMotion(value); });
         const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
-        return () => { active = false; subscription.remove(); };
+        return () => { active = false; subscription.remove(); appState.remove(); unsubscribe(); };
     }, []);
     const theme = {...baseTheme, animation: {...baseTheme.animation, scale: reduceMotion ? 0 : 1}};
     return (

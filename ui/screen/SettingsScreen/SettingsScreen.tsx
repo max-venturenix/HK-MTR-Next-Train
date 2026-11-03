@@ -1,8 +1,10 @@
 import {Platform, ScrollView, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
-import {Icon, Switch, Text, TouchableRipple, useTheme} from "react-native-paper";
+import {Icon, Text, TouchableRipple, useTheme} from "react-native-paper";
 import {useAppearance} from "../../context/AppearanceContext";
 import {layout} from "../../theme";
+
+import FacilityNotificationSettings from "../../component/FacilityNotificationSettings";
 
 export default function SettingsScreen() {
     const {colors} = useTheme();
@@ -37,21 +39,10 @@ export default function SettingsScreen() {
                         </TouchableRipple>
                     ))}
                 </View>
-                {!ready && <Text accessibilityRole="status">正在讀取外觀設定…</Text>}
+                {!ready && <Text accessibilityLiveRegion="polite" accessibilityRole={Platform.OS === "web" ? "status" : undefined}>正在讀取外觀設定…</Text>}
                 {error && <Text accessibilityRole="alert" style={{color: colors.error}}>{error}</Text>}
             </View>
-            <View style={layout.section}>
-                <Text variant="titleLarge" accessibilityRole="header">通知</Text>
-                <View style={[layout.heading, {backgroundColor: colors.surface, padding: 16, borderRadius: 12}]}>
-                    <View style={[layout.grow, {gap: 8}]}>
-                        <Text variant="bodyLarge">允許通知</Text>
-                        <Text variant="bodyMedium" style={{color: colors.onSurfaceVariant}}>通知功能尚未開放</Text>
-                    </View>
-                    <View style={{minWidth: 48, minHeight: 48, justifyContent: "center"}}>
-                        <Switch value={false} disabled accessibilityLabel="允許通知，通知功能尚未開放"/>
-                    </View>
-                </View>
-            </View>
+            <FacilityNotificationSettings/>
         </ScrollView>
     </SafeAreaView>;
 }

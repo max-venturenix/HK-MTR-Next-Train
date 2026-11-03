@@ -22,7 +22,7 @@ Web uses a centered content column of at most 720 units.
 | `/` | FrequentStationScreen | Saved stations, first saved station initially expanded |
 | `/search` | SelectStationScreen | Select line/station and view arrivals |
 | `/favorites` | Redirect | Compatibility redirect to `/` |
-| `/settings` | SettingsScreen | Appearance preference and future notification placeholder |
+| `/settings` | SettingsScreen | Appearance preference and Android facility alerts |
 | `/station/[stationCode]` | NextTrainByStationScreen | Arrivals and favorite toggle |
 | `/facilities` | FacilityOutageScreen | Facility notices or official-site web fallback |
 | `/station/[stationCode]/facilities` | FacilityOutageScreen | Station-scoped facility notices |
@@ -62,8 +62,7 @@ independently of favorites. Missing/invalid values use `system`; read failures u
 with feedback, and save failures keep the current session choice with retry guidance.
 Controls wait for the initial read and serialize changes while saving. Theme changes update
 the existing navigation tree rather than remounting it. Settings is pushed from the Favorites
-header, preserving the expanded station underneath. Its notification switch is disabled/off;
-there is no notification storage, permission request, or notification module.
+header, preserving the expanded station underneath. Android notification settings are described below.
 
 This is an Expo managed project: native projects are generated when needed, not maintained
 in this repository. `eas.json` holds existing build profiles; `app.json` holds app identity and
@@ -97,3 +96,35 @@ message. Empty feeds are not evidence that all facilities are operating.
 The source does not currently permit browser cross-origin requests. Web therefore shows
 an explanation and an official MTR facility-information link, without requesting the XML.
 No backend, persistent outage cache or change to favorites storage is introduced.
+
+## Android facility alerts
+
+`index.js` imports the platform notification service before Expo Router. Android defines
+one headless TaskManager task using Expo BackgroundTask / WorkManager, with a 15-minute
+minimum interval. Android restores scheduled work after reboot, subject to battery and
+network restrictions. Force-stop suspends work until the app is opened again.
+
+Settings defaults alerts off and scope to favorites. The independent AsyncStorage key
+`facility_alert_state_v1` stores enabled/scope preferences and per-station observed facility
+keys. Existing `favorite_station_list` remains a JSON string array. Successful bookmark
+writes invalidate removed stations' baselines. Newly monitored stations silently establish
+baselines on their first successful check. Re-enabling alerts starts fresh baselines.
+The Android service serializes preference changes, bookmark invalidation and checks.
+Foreground startup/resume also reconciles registration and checks enabled alerts.
+
+The existing XML parser and AJ/VJ/HJ/MJ classifier supply observations. Station/facility ID
+identifies an ongoing outage, falling back to notice ID. Failed requests and malformed XML
+preserve observations. A successful feed absence clears the observed outage so recurrence
+can alert. Each station's new facilities share one Traditional Chinese local notification.
+A high-importance channel requests sound and a banner, subject to system settings.
+The notifications config plugin bundles `assets/notification-icon.png` as the small icon
+for facility alerts and test messages. Android tints the train glyph in the status bar and
+on the left of each notification. Rebuild the native app to apply it.
+Tapping an outage alert or either Settings test notification opens the main 設施 tab (`/facilities`).
+No push token or backend is required. Other platforms show Android availability information.
+
+Before notification submission, a station snapshot is persisted to avoid repeating an alert
+if Android terminates the process after submission. A rejected submission restores that
+station's previous snapshot for retry, while other stations retain their progress. A process
+termination between persistence and submission can lose that alert. Storage and Android's
+notification service cannot commit atomically. Reinstalling or clearing app data resets history.

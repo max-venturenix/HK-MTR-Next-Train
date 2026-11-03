@@ -69,3 +69,14 @@ Expo SDK 58 selects React Native 0.88.1 and React 19.3.0. Babel remains on the c
 7.x line and TypeScript on Expo’s supported 6.0.x line. Do not independently select a newer incompatible React Native or Babel major.
 Keep generated `.expo/`, `dist/`, `node_modules/`, and `expo-env.d.ts` out of commits.
 Update documentation whenever commands or behavior change.
+
+## Android notification development
+
+Install the committed dependency tree with `npm ci`. Background alerts require a rebuilt
+native binary containing `expo-background-task`, `expo-task-manager` and `expo-notifications`.
+Use `npx expo run:android` to generate/build locally. Keep generated native projects out of
+commits. Use an installed build for background/reboot acceptance, since Expo Go does not
+establish the standalone app's permission, scheduling or reboot behavior. Keep `index.js`
+as the entry so the Android task is defined before Router, including headless execution.
+`node scripts/verify-facilities.cjs` includes notification monitor assertions with mocked
+storage, feed, permission, scheduling and presentation, alongside existing facility checks.

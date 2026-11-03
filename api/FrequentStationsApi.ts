@@ -28,6 +28,7 @@ export const addFavoriteStation = async (stationCode: string): Promise<void> => 
         const favoriteStations = await getFavoriteStations();
         favoriteStations.push(stationCode);
         await AsyncStorage.setItem("favorite_station_list", JSON.stringify(favoriteStations));
+        await import("../services/facilityNotifications").then(module => module.bookmarksChanged());
     } catch (error) {
         throw error;
     }
@@ -38,6 +39,7 @@ export const removeFavoriteStation = async (stationCode: string): Promise<void> 
         const favoriteStations = await getFavoriteStations();
         const updatedFavoriteStationList = favoriteStations.filter(item => item !== stationCode);
         await AsyncStorage.setItem("favorite_station_list", JSON.stringify(updatedFavoriteStationList));
+        await import("../services/facilityNotifications").then(module => module.bookmarksChanged());
     } catch (error) {
         throw error;
     }
