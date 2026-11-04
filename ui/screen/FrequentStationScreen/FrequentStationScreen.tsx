@@ -59,6 +59,10 @@ export default function FrequentStationScreen() {
                 <Button icon="reload" loading={busy} disabled={busy} contentStyle={layout.button}
                     onPress={() => void reload()}>重新整理</Button>
                 <IconButton icon="cog-outline" accessibilityLabel="設定" style={{width: 48, height: 48, margin: 0}}
+                    onLongPress={() => router.push("/dev")}
+                    accessibilityHint="長按開啟開發者工具"
+                    accessibilityActions={[{name: "dev", label: "開啟開發者工具"}]}
+                    onAccessibilityAction={event => { if (event.nativeEvent.actionName === "dev") router.push("/dev"); }}
                     onPress={() => router.push("/settings")}/>
                 </View>
             </View>

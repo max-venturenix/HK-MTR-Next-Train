@@ -7,7 +7,8 @@ on Favorites. Appearance follows the system by default, with saved light/dark ov
 Settings offers opt-in Android accessibility facility outage alerts for favorites or all stations.
 Existing outages establish a silent baseline, and new outages notify once per station per check.
 Background checks request a 15-minute minimum interval and resume after normal device reboot.
-Android Settings includes 測試通知 and 10 秒後測試通知 buttons, including when alerts are off.
+Long-press the Favorites settings gear to open 開發者工具, with Android notification tests
+and a persistent six-hour background activity log. Settings shows the app version and developer credit.
 Android battery/network restrictions can delay checks. Rebuild the native app for this feature. The interface uses Traditional Chinese. The 設施 tab shows native facility outage notices
 with accessibility filtering; station details also link to station-specific notices. Web links
 to MTR’s official facility information.

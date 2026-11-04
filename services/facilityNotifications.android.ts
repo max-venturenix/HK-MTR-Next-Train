@@ -2,10 +2,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as BackgroundTask from "expo-background-task";
 import * as TaskManager from "expo-task-manager";
 import * as Notifications from "expo-notifications";
-import {getFacilityOutages} from "../api/FacilityOutageApi";
+import {getFacilityOutages, InvalidFacilityFeedError} from "../api/FacilityOutageApi";
 import {getFavoriteStations} from "../api/FrequentStationsApi";
 import {mtrStationInfo} from "../data/MTRStationInfo";
 import {AlertScope, compareFacilityAlerts, FacilityAlertState, initialAlertState} from "../data/facilityAlertMonitor";
+
+import {isAccessibleFacility} from "../data/facilityOutages";
+import {FacilityActivity, saveFacilityActivity} from "./facilityActivityLog";
 
 const storageKey = "facility_alert_state_v1";
 const taskName = "facility-outage-check";
@@ -57,23 +60,53 @@ async function register() {
 async function unregister() {
     if (await TaskManager.isTaskRegisteredAsync(taskName)) await BackgroundTask.unregisterTaskAsync(taskName);
 }
-async function check() {
+async function check(activity?: FacilityActivity) {
+    const progress = async (update: Partial<FacilityActivity>) => {
+        if (activity) {
+            Object.assign(activity, update);
+            await saveFacilityActivity(activity);
+        }
+    };
     const state = await read();
-    if (!state.enabled || !(await permitted())) return;
+    await progress({scope: state.scope});
+    if (!state.enabled || !(await permitted())) {
+        await progress({stage: "skipped", reason: !state.enabled ? "通知監察已關閉" : "通知權限未開啟"});
+        return;
+    }
     const favorites = await getFavoriteStations();
+    await progress({stage: "requesting", apiCalled: true});
     const feed = await getFacilityOutages();
     const monitored = state.scope === "favorites" ? [...new Set(favorites)] :
         [...new Set([...Object.keys(mtrStationInfo), ...feed.notices.map(notice => notice.stationCode)])];
+    await progress({stage: "feed-read", stationsChecked: monitored.length,
+        facilities: feed.notices.filter(notice => monitored.includes(notice.stationCode) && isAccessibleFacility(notice))
+            .map(({stationCode, name, location, message}) => ({stationCode, name, location, message}))});
     await compareFacilityAlerts(state, feed.notices, monitored, save, async (stationCode, notices) => {
         const name = Object.hasOwn(mtrStationInfo, stationCode) ? mtrStationInfo[stationCode].chineseName : stationCode;
         await Notifications.scheduleNotificationAsync({content: {title: `${name}站無障礙設施停用`,
             body: notices.map(notice => `${notice.name}${notice.location ? `（${notice.location}）` : ""}`).join("、"),
             sound: true, data: {kind: "facility-outage", stationCode}}, trigger: {channelId}});
+        await progress({notifications: (activity?.notifications ?? 0) + 1});
     });
+    await progress({stage: "success"});
 }
 TaskManager.defineTask(taskName, () => serialize(async () => {
-    try { await check(); return BackgroundTask.BackgroundTaskResult.Success; }
-    catch { return BackgroundTask.BackgroundTaskResult.Failed; }
+    const activity: FacilityActivity = {id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        startedAt: Date.now(), stage: "started", apiCalled: false, notifications: 0};
+    await saveFacilityActivity(activity);
+    try {
+        await check(activity);
+        return BackgroundTask.BackgroundTaskResult.Success;
+    } catch (error) {
+        activity.reason = error instanceof InvalidFacilityFeedError ? "設施資料格式無效" :
+            activity.stage === "requesting" ? "API 請求失敗" :
+            activity.stage === "feed-read" ? "讀取設施資料後處理失敗" : "無法開始檢查";
+        activity.stage = "failed";
+        return BackgroundTask.BackgroundTaskResult.Failed;
+    } finally {
+        activity.finishedAt = Date.now();
+        await saveFacilityActivity(activity);
+    }
 }));
 Notifications.setNotificationHandler({handleNotification: async () => ({shouldPlaySound: true,
     shouldShowBanner: true, shouldShowList: true, shouldSetBadge: false})});

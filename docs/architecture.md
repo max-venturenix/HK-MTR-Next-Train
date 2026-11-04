@@ -22,7 +22,8 @@ Web uses a centered content column of at most 720 units.
 | `/` | FrequentStationScreen | Saved stations, first saved station initially expanded |
 | `/search` | SelectStationScreen | Select line/station and view arrivals |
 | `/favorites` | Redirect | Compatibility redirect to `/` |
-| `/settings` | SettingsScreen | Appearance preference and Android facility alerts |
+| `/settings` | SettingsScreen | Appearance preference, Android facility alerts, version and credit |
+| `/dev` | DeveloperScreen | Android notification tests and six-hour background activity |
 | `/station/[stationCode]` | NextTrainByStationScreen | Arrivals and favorite toggle |
 | `/facilities` | FacilityOutageScreen | Facility notices or official-site web fallback |
 | `/station/[stationCode]/facilities` | FacilityOutageScreen | Station-scoped facility notices |
@@ -103,6 +104,9 @@ No backend, persistent outage cache or change to favorites storage is introduced
 one headless TaskManager task using Expo BackgroundTask / WorkManager, with a 15-minute
 minimum interval. Android restores scheduled work after reboot, subject to battery and
 network restrictions. Force-stop suspends work until the app is opened again.
+`plugins/withWorkManagerKeepRules.js` preserves the generated Room database constructor
+used reflectively by WorkManager. The rule is applied during Android prebuild so optimized
+release builds can initialize background scheduling at startup.
 
 Settings defaults alerts off and scope to favorites. The independent AsyncStorage key
 `facility_alert_state_v1` stores enabled/scope preferences and per-station observed facility
@@ -120,7 +124,7 @@ A high-importance channel requests sound and a banner, subject to system setting
 The notifications config plugin bundles `assets/notification-icon.png` as the small icon
 for facility alerts and test messages. Android tints the train glyph in the status bar and
 on the left of each notification. Rebuild the native app to apply it.
-Tapping an outage alert or either Settings test notification opens the main 設施 tab (`/facilities`).
+Tapping an outage alert or either developer-screen test notification opens the main 設施 tab (`/facilities`).
 No push token or backend is required. Other platforms show Android availability information.
 
 Before notification submission, a station snapshot is persisted to avoid repeating an alert
@@ -128,3 +132,23 @@ if Android terminates the process after submission. A rejected submission restor
 station's previous snapshot for retry, while other stations retain their progress. A process
 termination between persistence and submission can lose that alert. Storage and Android's
 notification service cannot commit atomically. Reinstalling or clearing app data resets history.
+
+## Developer diagnostics
+
+A normal Favorites gear tap opens Settings; long press or its named accessibility action pushes
+`/dev`. Both preserve the Favorites screen underneath. Settings reads the version from
+`Constants.expoConfig.version` and shows `Development by Max Wong`.
+
+Android's TaskManager callback alone writes `facility_activity_log_v1`, separate from alert
+preferences and baselines. Each run persists start, request and parsed-feed stages, followed by
+success, skip or failure. Entries retain the monitored scope, API-call indicator, station count,
+accessible outage details and successfully submitted notification count. API request failures,
+invalid feeds and post-feed processing failures have distinct reasons. An unfinished entry shows
+its last recorded stage. Diagnostic write failures do not change monitor outcomes. Foreground
+startup/resume checks, setting changes and notification tests do not create background records.
+
+History expires six hours after each run starts and is pruned on reads/writes. The virtualized
+viewer orders runs newest first, renders Hong Kong timestamps, and rereads local history on focus,
+foreground return or refresh. It never requests the facility feed. No entries can be recovered
+from before installation of this logging feature. Notification tests retain their existing
+Android behavior, while iOS/web explain Android availability.

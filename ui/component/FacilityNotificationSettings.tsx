@@ -2,7 +2,7 @@ import {useCallback, useRef, useState} from "react";
 import {AppState, Linking, Platform, View} from "react-native";
 import {useFocusEffect} from "expo-router";
 import {Button, RadioButton, Switch, Text, TouchableRipple, useTheme} from "react-native-paper";
-import {getAlertSettings, sendTestNotification, setAlertSettings} from "../../services/facilityNotifications";
+import {getAlertSettings, setAlertSettings} from "../../services/facilityNotifications";
 import {AlertScope} from "../../data/facilityAlertMonitor";
 import {layout} from "../theme";
 
@@ -10,9 +10,6 @@ export default function FacilityNotificationSettings() {
     const {colors} = useTheme();
     const [settings, setSettings] = useState<Awaited<ReturnType<typeof getAlertSettings>>>();
     const [busy, setBusy] = useState(false);
-    const [testDelay, setTestDelay] = useState<0 | 10>();
-    const [feedback, setFeedback] = useState<string>();
-    const testing = testDelay !== undefined;
     const [error, setError] = useState<string>();
     const working = useRef(false);
     const load = useCallback(async () => {
@@ -30,24 +27,9 @@ export default function FacilityNotificationSettings() {
         working.current = true;
         setBusy(true);
         setError(undefined);
-        setFeedback(undefined);
         try { await setAlertSettings(enabled, scope); }
         catch (reason) { setError(reason instanceof Error ? reason.message : "無法儲存通知設定，請重試。"); }
         finally { await load(); working.current = false; setBusy(false); }
-    };
-    const testNotification = async (delaySeconds: 0 | 10) => {
-        if (working.current) return;
-        working.current = true;
-        setBusy(true);
-        setTestDelay(delaySeconds);
-        setError(undefined);
-        setFeedback(undefined);
-        try {
-            await sendTestNotification(delaySeconds);
-            setFeedback(delaySeconds ? "已安排測試通知，將於 10 秒後發送。你可以先離開應用程式。" : "已傳送測試通知。");
-        }
-        catch (reason) { setError(reason instanceof Error ? reason.message : "無法傳送測試通知，請重試。"); }
-        finally { await load(); working.current = false; setBusy(false); setTestDelay(undefined); }
     };
     if (Platform.OS !== "android") return <View style={layout.section}>
         <Text variant="titleLarge" accessibilityRole="header">通知</Text>
@@ -68,11 +50,6 @@ export default function FacilityNotificationSettings() {
         <Text variant="bodyMedium" style={{color: colors.onSurfaceVariant}}>
             約每 15 分鐘檢查一次，實際時間會受電池及網絡狀態影響。首次檢查只記錄現有停用設施，其後每次新停用只通知一次。
         </Text>
-        <Button mode="outlined" icon="bell-outline" loading={testDelay === 0} disabled={busy}
-            onPress={() => void testNotification(0)} contentStyle={{minHeight: 48}}>測試通知</Button>
-        <Button mode="outlined" icon="bell-outline" loading={testDelay === 10} disabled={busy}
-            onPress={() => void testNotification(10)} contentStyle={{minHeight: 48}}>10 秒後測試通知</Button>
-        {feedback && <Text accessibilityLiveRegion="polite">{feedback}</Text>}
         <Text variant="titleMedium">通知範圍</Text>
         <RadioButton.Group value={settings?.scope ?? "favorites"}
             onValueChange={value => void change(settings?.enabled ?? false, value as AlertScope)}>
@@ -88,7 +65,7 @@ export default function FacilityNotificationSettings() {
                 contentStyle={{minHeight: 48}}>開啟 Android 設定</Button>
         </>}
         {settings && !settings.available && <Text variant="bodyMedium">背景檢查受限制，請檢查 Android 的電池及背景活動設定。</Text>}
-        {busy && <Text accessibilityLiveRegion="polite">{testing ? "正在傳送測試通知…" : "正在更新通知設定…"}</Text>}
+        {busy && <Text accessibilityLiveRegion="polite">正在更新通知設定…</Text>}
         {!settings && !error && <Text accessibilityLiveRegion="polite">正在讀取通知設定…</Text>}
         {error && <Text accessibilityRole="alert" style={{color: colors.error}}>{error}</Text>}
         {error && <Button disabled={busy} onPress={() => { setError(undefined); void load(); }} contentStyle={{minHeight: 48}}>重新讀取設定</Button>}

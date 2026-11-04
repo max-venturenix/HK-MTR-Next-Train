@@ -95,6 +95,9 @@ async function verifyAlerts() {
     const Module = require("node:module");
     const originalLoad = Module._load;
     let stored;
+    const historyStore = new Map();
+    let failLog = false;
+    let invalidFeed = false;
     let favorites = ["DIH", "HOK"];
     let notices = [feed.notices[0]];
     let failFetch = false;
@@ -106,7 +109,11 @@ async function verifyAlerts() {
     const triggers = [];
     const mocks = {
         "@react-native-async-storage/async-storage": {
-            getItem: async () => stored ?? null, setItem: async (_, value) => { stored = value; }
+            getItem: async key => key === "facility_alert_state_v1" ? stored ?? null : historyStore.get(key) ?? null,
+            setItem: async (key, value) => {
+                if (key === "facility_alert_state_v1") stored = value;
+                else { if (failLog) throw new Error("Storage full"); historyStore.set(key, value); }
+            }
         },
         "expo-background-task": {BackgroundTaskResult: {Success: 1, Failed: 2},
             BackgroundTaskStatus: {Available: 1}, getStatusAsync: async () => 1,
@@ -126,38 +133,53 @@ async function verifyAlerts() {
                 triggers.push(trigger);
             }},
         "../api/FrequentStationsApi": {getFavoriteStations: async () => favorites},
-        "../api/FacilityOutageApi": {getFacilityOutages: async () => {
+        "../api/FacilityOutageApi": {InvalidFacilityFeedError: api.InvalidFacilityFeedError, getFacilityOutages: async () => {
+            if (invalidFeed) throw new api.InvalidFacilityFeedError("Invalid XML");
             if (failFetch) throw new Error("Offline or invalid XML");
             return {notices};
         }}
     };
     Module._load = function (request, parent, main) {
-        if (parent?.filename.endsWith("facilityNotifications.android.ts") && mocks[request]) return mocks[request];
+        if ((parent?.filename.endsWith("facilityNotifications.android.ts") || parent?.filename.endsWith("facilityActivityLog.ts")) && mocks[request]) return mocks[request];
         return originalLoad.call(this, request, parent, main);
     };
     let monitor;
     try { monitor = require("../services/facilityNotifications.android.ts"); }
     finally { Module._load = originalLoad; }
+    const history = () => JSON.parse(historyStore.get("facility_activity_log_v1") ?? "[]");
     await monitor.setAlertSettings(true, "favorites");
+    assert.equal(history().length, 0, "settings checks do not enter background history");
     assert.equal(registered, true);
     assert.equal(deliveries.length, 0, "first check is silent");
     const second = {...feed.notices[0], id: "2", facilityId: "2"};
     const third = {...second, id: "3", facilityId: "3"};
     notices.push(second, third);
     await Promise.all([task(), task()]);
+    assert.equal(history().length, 2);
+    assert.equal(history()[0].stage, "success");
+    assert.equal(history()[0].facilities.length, 3);
+    assert.equal(history()[0].notifications, 1);
+    assert.equal(history()[0].stationsChecked, 2);
     assert.equal(deliveries.length, 1, "overlapping checks produce one station alert");
     assert.equal(deliveries[0].data.stationCode, "DIH");
     assert.ok(deliveries[0].body.includes("、"), "multiple facilities share one notification");
     notices = notices.map(row => ({...row, id: "changed", updatedAt: "2030-01-01", message: "Changed"}));
     await monitor.initializeFacilityNotifications();
     assert.equal(deliveries.length, 1, "wording/timestamp changes and restart stay silent");
+    assert.equal(history().length, 2, "foreground resume does not enter history");
     const before = stored;
     failFetch = true;
     assert.equal(await task(), 2);
     assert.equal(stored, before, "failed feed preserves observations");
+    assert.equal(history().at(-1).reason, "API 請求失敗");
     failFetch = false;
+    invalidFeed = true;
+    assert.equal(await task(), 2);
+    assert.equal(history().at(-1).reason, "設施資料格式無效");
+    invalidFeed = false;
     notices = [];
     await task();
+    assert.deepEqual(history().at(-1).facilities, []);
     notices = [second];
     await task();
     assert.equal(deliveries.length, 2, "outage returning after clearance alerts again");
@@ -174,6 +196,8 @@ async function verifyAlerts() {
     failStation = "HOK";
     assert.equal(await task(), 2);
     assert.equal(deliveries.length, 3);
+    assert.equal(history().at(-1).reason, "讀取設施資料後處理失敗");
+    assert.equal(history().at(-1).notifications, 1);
     failStation = undefined;
     await task();
     assert.equal(deliveries.length, 4, "failed station retries without repeating successful station");
@@ -181,6 +205,8 @@ async function verifyAlerts() {
     granted = false;
     notices.push({...third, facilityId: "4"});
     await task();
+    assert.equal(history().at(-1).stage, "skipped");
+    assert.equal(history().at(-1).apiCalled, false);
     assert.equal(deliveries.length, 4, "revoked permission prevents delivery");
     await monitor.setAlertSettings(false, "favorites");
     assert.equal(registered, false);
@@ -189,7 +215,15 @@ async function verifyAlerts() {
     granted = true;
     await monitor.setAlertSettings(true, "favorites");
     assert.equal(deliveries.length, 4, "re-enable silently baselines again");
+    failLog = true;
+    assert.equal(await task(), 1, "log write failure preserves enabled check success");
+    failLog = false;
     await monitor.setAlertSettings(false, "favorites");
+    await task();
+    assert.equal(history().at(-1).reason, "通知監察已關閉");
+    failLog = true;
+    assert.equal(await task(), 1, "log write failure does not fail a skipped monitor");
+    failLog = false;
     const beforeTest = stored;
     await monitor.sendTestNotification();
     assert.equal(deliveries.length, 5, "test notification sends immediately with monitoring off");
@@ -210,6 +244,27 @@ async function verifyAlerts() {
     granted = false;
     await assert.rejects(monitor.sendTestNotification());
     assert.equal(deliveries.length, 6, "permission denial prevents a test notification");
+    const log = require("../services/facilityActivityLog.ts");
+    const now = Date.now();
+    historyStore.set("facility_activity_log_v1", JSON.stringify([...history(),
+        {id: "expired", startedAt: now - 6 * 3600000 - 1, stage: "started", apiCalled: false, notifications: 0}]));
+    await log.saveFacilityActivity({id: "interrupted", startedAt: now, stage: "requesting", apiCalled: true, notifications: 0});
+    delete require.cache[require.resolve("../services/facilityActivityLog.ts")];
+    Module._load = function (request, parent, main) {
+        if (request === "@react-native-async-storage/async-storage") return mocks[request];
+        return originalLoad.call(this, request, parent, main);
+    };
+    let reloaded;
+    try { reloaded = require("../services/facilityActivityLog.ts"); } finally { Module._load = originalLoad; }
+    const logs = await reloaded.getFacilityActivity();
+    assert.equal(logs.find(row => row.id === "interrupted").stage, "requesting", "persisted request stage survives module restart");
+    assert.equal(logs.find(row => row.id === "interrupted").finishedAt, undefined);
+    assert.ok(logs.every((row, index) => !index || logs[index - 1].startedAt >= row.startedAt));
+    assert.ok(!logs.some(row => row.id === "expired"));
+    const count = logs.length;
+    await reloaded.getFacilityActivity();
+    assert.equal(history().length, count, "viewing history adds no run");
+    console.log("Background activity success, empty, skip, failure, expiry, interruption and isolation assertions passed.");
     console.log("Android monitor baselines, grouping, deduplication, failures, scope, permission and cancellation assertions passed.");
 }
 verifyAlerts().catch(error => { console.error(error); process.exitCode = 1; });

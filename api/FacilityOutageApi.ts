@@ -49,9 +49,12 @@ export function parseFacilityOutageFeed(xml: string): FacilityOutageFeed {
     return {updatedAt: parseFacilityTimestamp(root["@_lastupdate"]), notices};
 }
 
+export class InvalidFacilityFeedError extends Error {}
+
 export async function getFacilityOutages(signal?: AbortSignal): Promise<FacilityOutageFeed> {
     const response = await axios.get<string>("https://tnews.mtr.com.hk/facility/outage.xml", {
         responseType: "text", transformResponse: [data => data], timeout: 10000, signal
     });
-    return parseFacilityOutageFeed(response.data);
+    try { return parseFacilityOutageFeed(response.data); }
+    catch { throw new InvalidFacilityFeedError("Invalid facility XML"); }
 }

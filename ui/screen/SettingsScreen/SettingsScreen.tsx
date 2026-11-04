@@ -1,3 +1,4 @@
+import Constants from "expo-constants";
 import {Platform, ScrollView, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {Icon, Text, TouchableRipple, useTheme} from "react-native-paper";
@@ -11,7 +12,7 @@ export default function SettingsScreen() {
     const {preference, ready, saving, error, setPreference} = useAppearance();
     return <SafeAreaView edges={["left", "right", "bottom"]}
         style={[layout.screen, {backgroundColor: colors.background}]}>
-        <ScrollView contentContainerStyle={layout.content}>
+        <ScrollView contentContainerStyle={[layout.content, {flexGrow: 1}]}>
             <View style={layout.section}>
                 <Text variant="titleLarge" accessibilityRole="header">外觀</Text>
                 <Text variant="bodyLarge" style={{color: colors.onSurfaceVariant}}>選擇應用程式的顯示模式。</Text>
@@ -43,6 +44,10 @@ export default function SettingsScreen() {
                 {error && <Text accessibilityRole="alert" style={{color: colors.error}}>{error}</Text>}
             </View>
             <FacilityNotificationSettings/>
+            <View style={{marginTop: "auto", paddingTop: 24, gap: 8, alignItems: "center"}}>
+                <Text variant="bodyMedium" style={{color: colors.onSurfaceVariant}}>版本 {Constants.expoConfig?.version ?? "—"}</Text>
+                <Text variant="bodyMedium" style={{color: colors.onSurfaceVariant}}>Development by Max Wong</Text>
+            </View>
         </ScrollView>
     </SafeAreaView>;
 }

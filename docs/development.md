@@ -80,3 +80,9 @@ establish the standalone app's permission, scheduling or reboot behavior. Keep `
 as the entry so the Android task is defined before Router, including headless execution.
 `node scripts/verify-facilities.cjs` includes notification monitor assertions with mocked
 storage, feed, permission, scheduling and presentation, alongside existing facility checks.
+
+Android prebuild applies the local `withWorkManagerKeepRules` config plugin from `app.json`.
+It appends an idempotent R8 rule for `androidx.work.impl.WorkDatabase_Impl`'s no-argument
+constructor, which Room 2.6.1 instantiates reflectively. Preserve this rule when generating
+native clients. Release-mode device checks should use a fresh generated project so R8 startup
+failures are exercised alongside development builds.

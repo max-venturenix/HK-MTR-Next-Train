@@ -405,7 +405,7 @@ Use a newly built installed Android app containing the notification/background m
   alerts again. Offline/invalid feeds preserve history and retry later.
 - Add/remove/re-add bookmarks and switch scopes. Newly monitored stations baseline silently,
   while previously monitored stations still alert for subsequent new outages.
-- Tap a facility outage alert and each Settings test notification. Verify the main 設施 tab
+- Tap a facility outage alert and each developer-screen test notification. Verify the main 設施 tab
   opens when the app is running, in the background, or starting from a closed state.
 - Disable alerts and verify the WorkManager registration is removed. Re-enable and confirm
   existing outages establish fresh silent baselines.
@@ -454,7 +454,7 @@ and a 440 by 64 dp clickable row. Test monitoring was left off.
 
 ### Notification test buttons, 2026-11-03
 
-Added 測試通知 and 30 秒後測試通知 to Android Settings. Both delivered through the existing
+Added 測試通知 and 30 秒後測試通知 to Android Settings (subsequently moved to the developer screen). Both delivered through the existing
 high-importance channel on the installed Android 16 / API 36 emulator with monitoring off.
 The delayed test was absent at 25 seconds and appeared after the requested 30-second delay
 while the app was backgrounded. Stored state remained disabled/favorites with empty history.
@@ -496,3 +496,117 @@ On Android 16, tapping the immediate Lok Fu test notification opened the main �
 both from Settings and after the app process was killed in the background. Tapping the
 delayed test from the launcher also opened the tab. Each check found 設施服務狀況 with
 the bottom tab bar visible.
+
+## Developer diagnostics acceptance
+
+- Tap the Favorites gear to open Settings. Verify the configured app version and exact
+  `Development by Max Wong` credit at the bottom, including short screens and large text.
+- Long-press and release the same gear. Only 開發者工具 opens. Android Back restores the
+  expanded favorite. Verify the named 開啟開發者工具 screen-reader action.
+- Both notification test buttons live in 開發者工具. Verify immediate and 10-second delivery,
+  permission denial feedback and unchanged monitoring preferences with monitoring off.
+- Enable monitoring, leave the app and force the registered WorkManager job. Reopen 開發者工具
+  and verify a new background run with Hong Kong timestamp, scope, API outcome, station count,
+  accessible outage details and notification count. A valid empty feed says 未有相關停用通告.
+- Reopening, resuming and refreshing the viewer must add no background run. Force an offline
+  execution, restore networking and retry. Verify failure then success and intact outage baselines.
+- Verify history across process restart and six-hour expiry. An interrupted run retains its
+  last recorded stage. Empty history explains Android scheduling and when recording begins.
+- Review light/dark appearance, increased text size and system Back on Android. On iOS/web,
+  verify the Android availability explanation. Native exports alone do not establish runtime behavior.
+
+### Developer diagnostics implementation checks, 2026-11-04
+
+TypeScript, facility/monitor/log assertions, existing arrival assertions and whitespace checks
+passed. `npm run export:all` exported Android, iOS and web. A temporary generated Android
+project with the updated embedded JavaScript built successfully with `:app:assembleDebug`.
+`npm run check` stopped at dependency alignment because Expo recommends updates for
+8 existing dependencies. Dependencies were kept unchanged. The initial sandboxed Doctor
+run could not reach its online services. After the user explicitly approved metadata sharing,
+the online `npm run doctor` retry completed with 19/20 checks passing, including config-schema
+and React Native Directory validation. Only dependency alignment failed, with seven patch
+updates and a minor update for `react-native-safe-area-context` from 5.10.1 to ~5.11.1.
+
+Context7 supplied SDK 58 configuration guidance. Its React Native 0.88.1 query returned no
+matching guidance; installed Paper/React Native/native-web sources and types were checked
+for long-press suppression and accessibility props. UI UX Pro Max's focused React Native
+search and Impeccable's native/web audit playbooks informed the affected UI review.
+
+Native acceptance used a separate Pixel 8a Android API 35 emulator after the existing API 36
+emulator stopped responding to shell/screenshot commands. The new debug APK installed and
+ran. A forced WorkManager job with the app process closed fetched the real MTR feed and
+persisted a successful run with 99 monitored stations, three accessible-facility notices and
+zero new notifications. Both immediate and delayed tests delivered. Reopening/resuming and
+refreshing the viewer retained exactly one background run. A fresh app start followed by
+long-press/release opened only 開發者工具; Android Back restored 鑽石山 expanded.
+
+Light/default and dark/150% text captures showed wrapping log details and readable footer
+copy. Source/native Impeccable review found no blocking issue in these states. Provisional
+native scores are accessibility 3, performance 3, theming 4, platform conformance 4 and
+adaptivity 3 (17/20). TalkBack speech/custom action execution, tablet/landscape, iOS runtime,
+web interaction and natural scheduling remain unverified. Evidence is in `/tmp/mtr-dev-qa/`.
+
+During combined forced-headless and repeated display/deep-link tests, the temporary debug
+app displayed a blank surface with ReactHost reporting its context was not ready. Restarting
+the app restored it and the normal long-press/Back test passed. That combined lifecycle case
+needs confirmation in a fresh production build; no native lifecycle change was made here.
+The new emulator's display settings were restored to light/system and font scale 1.0.
+
+### SDK 58 dependency alignment, 2026-11-04
+
+Ran `npx expo install --fix --npm` using Context7's SDK 58 upgrade guidance. The lockfile
+now resolves Expo 58.0.23, Metro runtime 58.0.17, Constants 58.0.15, Linking 58.0.16,
+Notifications 58.1.8, Router 58.0.30, Splash Screen 58.0.13 and Safe Area Context 5.11.1,
+plus their compatible transitive updates. npm preserved peer dependency validation.
+
+`npm run check` passed TypeScript, dependency alignment and all 20 online Doctor checks.
+`npm run export:all` exported Android, iOS and web. Both existing verification scripts
+(`verify-api.cjs` and `verify-facilities.cjs`) and `git diff --check` passed.
+npm reports five moderate audit vulnerabilities. No forced audit fixes were applied.
+
+Native acceptance was pending at this dependency-only checkpoint. The Android release
+verification below covers the updated modules. iOS native-client testing remains pending.
+Earlier screenshots and background-job results above used the previous dependency set.
+
+### Updated Android release verification, 2026-11-04
+
+Generated a fresh temporary Android project with SDK 58.0.23 and built an optimized ARM64
+release APK. Testing used the Pixel 8a Android 15 / API 35 emulator and preserved its saved
+DIH favorite and alert preferences through installation.
+
+The first optimized release had a P0 startup crash before JavaScript loaded. R8 removed the
+public no-argument constructor of `androidx.work.impl.WorkDatabase_Impl`, which Room 2.6.1
+loads reflectively. The new local Expo config plugin preserves that constructor. Two prebuild
+runs produced exactly one rule. The rebuilt optimized release installed and started successfully.
+Context7's AndroidX reflection guidance was checked against the installed Room AAR's keep
+rules and R8's removed-member report.
+
+Passed native checks included live arrivals, saved favorites, normal Settings navigation,
+version/credit footer, long-press/release to 開發者工具, and Back preserving expanded DIH.
+Both immediate and 10-second test notifications delivered with monitoring off, including
+delayed delivery while backgrounded. Facility notices loaded after the lifecycle tests.
+
+Forced background jobs recorded successful checks of 99 stations with three accessible-facility
+outage notices and zero new notifications. Turning Wi-Fi and mobile data off produced
+`檢查失敗 · API 請求失敗`. Restoring networking and forcing the rescheduled job produced
+a new successful run. Reopening/refreshing the viewer added no run. A separate test confirmed
+the app PID was absent after process termination, forced background work with the launcher
+foregrounded, then verified a new successful timestamp in persisted history after reopening.
+WorkManager process-restart reconciliation sometimes replaced its scheduled job, so the
+verification forced the current job again after reconciliation.
+
+Light/default text, dark/150% text, and landscape captures showed readable controls, wrapping
+facility details, reachable footer copy and intact safe areas. Impeccable native review found
+no remaining blocking issue in these reviewed states. Provisional scores remain accessibility
+3, performance 3, theming 4, platform conformance 4 and adaptivity 3 (17/20). The earlier blank
+surface was not reproduced in these release-mode headless/appearance/rotation checks.
+The final logcat scan found no new fatal exception, missing constructor, React context-not-ready
+message or ReactNativeJS error matching the startup failure after the corrected installation.
+
+`npm run check` passed all 20 Doctor checks. All-platform exports, both existing verification
+scripts and whitespace checks passed after the config fix. Monitoring was returned to off,
+with the original light/system appearance, 1.0 font scale, portrait rotation and networking
+restored. TalkBack/custom action speech, tablet layouts, natural 15-minute scheduling and
+reboot execution were not tested in this pass. Evidence, automation logs and screenshots are
+in `/tmp/mtr-sdk58-evidence/`. The locally debug-key-signed release-mode test APK is at
+`/tmp/mtr-sdk58-qa/android/app/build/outputs/apk/release/app-release.apk`.

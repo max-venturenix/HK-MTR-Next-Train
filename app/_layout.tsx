@@ -41,6 +41,7 @@ function ThemedLayout() {
                 <Stack.Screen name="(tabs)" options={{headerShown: false}}/>
                 <Stack.Screen name="station/[stationCode]" options={{title: "車站"}}/>
                 <Stack.Screen name="favorites" options={{headerShown: false}}/>
+                <Stack.Screen name="dev" options={{title: "開發者工具", headerBackTitle: "收藏"}}/>
                 <Stack.Screen name="settings" options={{title: "設定", headerBackTitle: "收藏"}}/>
             </Stack>
             </ThemeProvider>
