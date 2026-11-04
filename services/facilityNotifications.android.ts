@@ -80,7 +80,7 @@ async function check(activity?: FacilityActivity) {
         [...new Set([...Object.keys(mtrStationInfo), ...feed.notices.map(notice => notice.stationCode)])];
     await progress({stage: "feed-read", stationsChecked: monitored.length,
         facilities: feed.notices.filter(notice => monitored.includes(notice.stationCode) && isAccessibleFacility(notice))
-            .map(({stationCode, name, location, message}) => ({stationCode, name, location, message}))});
+            .map(({stationCode, name, location, message, english}) => ({stationCode, name, location, message, english}))});
     await compareFacilityAlerts(state, feed.notices, monitored, save, async (stationCode, notices) => {
         const name = Object.hasOwn(mtrStationInfo, stationCode) ? mtrStationInfo[stationCode].chineseName : stationCode;
         await Notifications.scheduleNotificationAsync({content: {title: `${name}站無障礙設施停用`,

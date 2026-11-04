@@ -6,6 +6,7 @@ export interface FacilityOutage {
     name: string;
     location: string;
     message: string;
+    english?: {name: string; location: string; message: string};
     alternative: string;
     remarks: string;
     phone?: string;

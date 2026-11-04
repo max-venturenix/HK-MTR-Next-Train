@@ -610,3 +610,37 @@ restored. TalkBack/custom action speech, tablet layouts, natural 15-minute sched
 reboot execution were not tested in this pass. Evidence, automation logs and screenshots are
 in `/tmp/mtr-sdk58-evidence/`. The locally debug-key-signed release-mode test APK is at
 `/tmp/mtr-sdk58-qa/android/app/build/outputs/apk/release/app-release.apk`.
+
+## English developer tools and expandable activity
+
+- Open Developer Tools using the Favorites gear shortcut. Verify English headings, controls,
+  permission feedback, empty/loading/error states and Android-only information on iOS/web.
+- Runs start collapsed, newest first, with a Hong Kong time and short outcome. Tap to expand
+  saved details, tap again to collapse, and open another row to close the previous row.
+- Refresh while a run is expanded. It stays open if retained, and disappears after six-hour expiry.
+  Refreshing, opening and expanding must not call MTR or add background entries.
+- Check English station names, MTR English facility text for new runs, labeled source text
+  for older records and English explanations for skips, invalid feeds and API/post-feed failures.
+- Review light/dark themes, enlarged text, landscape and TalkBack expanded/collapsed state.
+
+### English expandable log verification, 2026-11-04
+
+`npm run check` passed, including all 20 online Expo Doctor checks. `npm run export:all`
+exported Android, iOS and web. API/facility verification scripts and `git diff --check` passed.
+New assertions cover retaining English facility fields alongside Traditional Chinese and
+persisting them in background history, including feeds without English fields.
+
+Built and installed the optimized 2.2.1 Android release on the Samsung API 36 AVD.
+Verified initial collapsed rows, expansion/collapse, local refresh retaining the selected
+run and latest timestamp, and a real forced WorkManager run with 99 stations and three
+English facility notices. A favorite-only run showed the English empty-outage result.
+Both notification controls produced English success feedback and submitted notifications.
+Restored monitoring to enabled/Favorites and system appearance with normal text after testing.
+Light and dark/150% text captures showed readable titles and controls. Native source audit
+found no blocking layout/theming issues. TalkBack speech, iOS runtime and web interaction
+were not exercised in this pass. Older-record source fallback was checked in source and
+fixtures, without a native older nonempty record in the inspected viewport.
+
+The AVD booted with a launcher crash and an incorrect 320×480 physical display. Runtime
+size/density overrides of 1080×1440 and 320 dpi made it usable for these tests. These emulator
+settings were retained for manual testing. No application data was cleared.

@@ -23,7 +23,7 @@ Web uses a centered content column of at most 720 units.
 | `/search` | SelectStationScreen | Select line/station and view arrivals |
 | `/favorites` | Redirect | Compatibility redirect to `/` |
 | `/settings` | SettingsScreen | Appearance preference, Android facility alerts, version and credit |
-| `/dev` | DeveloperScreen | Android notification tests and six-hour background activity |
+| `/dev` | DeveloperScreen | English developer tools, Android notification tests and expandable six-hour background activity |
 | `/station/[stationCode]` | NextTrainByStationScreen | Arrivals and favorite toggle |
 | `/facilities` | FacilityOutageScreen | Facility notices or official-site web fallback |
 | `/station/[stationCode]/facilities` | FacilityOutageScreen | Station-scoped facility notices |
@@ -152,3 +152,9 @@ viewer orders runs newest first, renders Hong Kong timestamps, and rereads local
 foreground return or refresh. It never requests the facility feed. No entries can be recovered
 from before installation of this logging feature. Notification tests retain their existing
 Android behavior, while iOS/web explain Android availability.
+
+The Developer Tools screen uses English labels and diagnostics. Background runs initially show
+a Hong Kong time and short outcome. Tapping a row expands its saved details, with one row
+open at a time. Local refresh preserves the expanded run until it expires. New records retain
+MTR's English facility text alongside the existing fields. Older records fall back to labeled
+source text, and known persisted Chinese diagnostic reasons are displayed in English.

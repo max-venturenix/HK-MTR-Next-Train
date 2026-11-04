@@ -42,6 +42,7 @@ export function parseFacilityOutageFeed(xml: string): FacilityOutageFeed {
         const phone = text(row.phonenumber).replace(/\s/g, "");
         return {id, stationCode, facilityId: text(row.facilityid), facilityType: text(row.facilitytype),
             name: bilingual("facilityname"), location: bilingual("location"), message: bilingual("message"),
+            english: {name: text(row.facilityname), location: text(row.location), message: text(row.message)},
             alternative: bilingual("alternative"), remarks: bilingual("remarks"),
             phone: /^(?:\+?852)?\d{8}$/.test(phone) ? phone : undefined,
             updatedAt: parseFacilityTimestamp(row["@_lastupdate"])};

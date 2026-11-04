@@ -10,7 +10,7 @@ export interface FacilityActivity {
     apiCalled: boolean;
     reason?: string;
     stationsChecked?: number;
-    facilities?: {stationCode: string; name: string; location: string; message: string}[];
+    facilities?: {stationCode: string; name: string; location: string; message: string; english?: {name: string; location: string; message: string}}[];
     notifications: number;
 }
 const storageKey = "facility_activity_log_v1";

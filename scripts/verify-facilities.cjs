@@ -19,6 +19,11 @@ assert.equal(feed.notices[0].facilityId, "001");
 assert.equal(feed.notices[0].id, "001");
 assert.equal(feed.notices[0].phone, "29282300");
 assert.equal(feed.notices[0].location, "Concourse");
+const bilingualFeed = api.parseFacilityOutageFeed(xml(notice().replace("<location>",
+    "<facilityname>Lift</facilityname><message>Under maintenance</message><location>")));
+assert.equal(bilingualFeed.notices[0].name, "升降機");
+assert.deepEqual(bilingualFeed.notices[0].english, {name: "Lift", location: "Concourse", message: "Under maintenance"});
+assert.equal(feed.notices[0].english.name, ""); // Old feeds remain readable without English fields.
 assert.equal(feed.updatedAt, "2026-11-02T06:11:39.000Z");
 assert.equal(api.parseFacilityOutageFeed(xml("")).notices.length, 0);
 assert.equal(api.parseFacilityOutageFeed("<outagemessages/>").notices.length, 0);
@@ -151,6 +156,7 @@ async function verifyAlerts() {
     assert.equal(history().length, 0, "settings checks do not enter background history");
     assert.equal(registered, true);
     assert.equal(deliveries.length, 0, "first check is silent");
+    notices[0] = {...notices[0], english: bilingualFeed.notices[0].english};
     const second = {...feed.notices[0], id: "2", facilityId: "2"};
     const third = {...second, id: "3", facilityId: "3"};
     notices.push(second, third);
@@ -158,6 +164,7 @@ async function verifyAlerts() {
     assert.equal(history().length, 2);
     assert.equal(history()[0].stage, "success");
     assert.equal(history()[0].facilities.length, 3);
+    assert.deepEqual(history()[0].facilities[0].english, bilingualFeed.notices[0].english);
     assert.equal(history()[0].notifications, 1);
     assert.equal(history()[0].stationsChecked, 2);
     assert.equal(deliveries.length, 1, "overlapping checks produce one station alert");
