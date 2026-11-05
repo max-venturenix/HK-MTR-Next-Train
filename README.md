@@ -3,7 +3,8 @@
 An Expo / React Native app for Hong Kong MTR arrivals, with station search,
 live arrival groups, and persistent favorite stations. Favorites open first; station search
 is available from the labeled bottom navigation. Settings opens from the gear beside refresh
-on Favorites. Appearance follows the system by default, with saved light/dark overrides.
+on Favorites. Under 設定 → 外觀, choose 跟隨系統 (default), 淺色, 深色, or
+Little Twin Stars（雙子星）. The last option is a fixed pastel light theme with bundled Kiki and Lala artwork.
 Settings offers opt-in Android accessibility facility outage alerts for favorites or all stations.
 Existing outages establish a silent baseline, and new outages notify once per station per check.
 Background checks request a 15-minute minimum interval and resume after normal device reboot.

@@ -22,10 +22,15 @@ native binaries or validate device interactions. No automated test framework or 
 Run on Android, iOS, and web, recording each platform actually tested:
 
 - Open favorites: Traditional Chinese controls and labeled Material star/train tabs. Check system light and dark appearances.
-- From Favorites, open 設定 using the gear beside refresh. Select 跟隨系統, 淺色 and 深色;
+- From Favorites, open 設定 using the gear beside refresh. Select 跟隨系統, 淺色, 深色, and Little Twin Stars（雙子星）;
   verify screens, navigation and status bar update immediately. Restart/reload to check persistence.
   Change device appearance: only 跟隨系統 should respond. Return with Back and verify the same
   expanded (or collapsed) favorite remains. Check header fit at narrow widths and large text sizes.
+- In Little Twin Stars, check the Settings thumbnail and larger preview, full artwork on Favorites/Search,
+  and compact artwork on station details and facilities. Test narrow screens, landscape, large text and
+  offline artwork. Check that decorations do not receive focus or obscure controls, line markers, arrivals,
+  or service messages. Changing appearance must preserve the search selection and expanded favorite;
+  leaving this theme removes the decorated panels. Developer Tools uses the palette without a panel.
 - In Settings, verify 允許通知 is off/disabled, explains 通知功能尚未開放, and never requests
   permission. Check radio labels/checked states with a screen reader and web keyboard controls.
 - With invalid/missing `appearance_preference`, expect system appearance. Simulate storage
@@ -45,6 +50,50 @@ Run on Android, iOS, and web, recording each platform actually tested:
   must not overwrite the current station. Test a failed detail request and retry.
 - Check notches, Android system bars, tab-bar overlap, scrolling, and visible header actions.
 - On web, refresh a detail URL with the hosting server configured to serve the SPA fallback.
+
+## Little Twin Stars appearance — 2026-11-05
+
+- `npm run check`: passed, including all 20 Expo Doctor checks. The first sandboxed attempt
+  could not fetch metadata; the network-enabled run passed. `npm run export:all`: passed for
+  Android, iOS and web after the final train asset and star placement changes.
+- `node scripts/verify-api.cjs` and `node scripts/verify-facilities.cjs`: passed, including
+  failure retention, stale results, lifecycle and background monitor assertions.
+- Targeted temporary provider assertions with mocked storage passed: pending load blocks changes,
+  missing/invalid values use system, failed reads show feedback, failed writes retain the session
+  choice, and reselecting the theme retries saving. No test framework was added.
+- Android: tested current source through Expo Go on the AVD whose boot identity is
+  `Samsung_Galaxy_S26_Ultra_API_36`, API 36. Its missing Galaxy skin and stale display overrides
+  initially produced a generic 1080×1440 surface; those captures are not S26 layout evidence.
+  Relaunched that AVD with its configured 1440×3120 display at 480 dpi, removed the stale overrides,
+  and verified its boot identity and physical display before subsequent tests.
+- Passed on that corrected profile: light/dark/theme radio selection; saved theme after reopening;
+  theme stays light under dark OS; follow-system switches between dark/light OS; 150% text;
+  Search, live station arrivals, Facilities, Settings and landscape Settings. Font scale, rotation
+  and OS night mode were restored. Expo Go occasionally required reopening/dismissing its dev menu.
+- Web: checked 390×844 and desktop, keyboard Space selection and checked semantics, reload
+  persistence, selection sheet, live arrivals, facilities fallback, and expanded favorite/search
+  selection preservation across theme changes. Removed the temporary favorite afterward.
+- Contrast measured from theme tokens: body 12.57:1, secondary text 5.77:1, white action text
+  6.41:1; meaningful outline against surfaceVariant 3.44:1. All audited text/container pairs
+  met 4.5:1. Decorations are hidden from accessibility traversal and ignore pointer events.
+- Impeccable audit: native source/captures and web source/runtime, with independent finish review.
+  Web detector returned no findings. Resolved a web SVG attribute warning and the reviewer's P2
+  finding that narrow headers cropped the cream stars; independent side anchoring keeps both visible.
+  That P2 was located in `ui/component/LittleTwinStarsArtwork.tsx` (the cropped background layer);
+  the fix anchors each cream star separately at 9% side insets. The final reviewer confirmed the
+  crop resolved and reported no new in-scope findings for the generated train, station/facility
+  screens, landscape and enlarged-text captures. This verdict covers the reviewed evidence only.
+  React review confirmed stable component identity, unchanged navigation tree, no added timers,
+  data fetching, dependency changes or conditional hooks.
+- Generated `star-train.png` with built-in image generation for Search; official portrait remains
+  on other screens. Both assets are bundled locally. See the asset README for source and prompt.
+- Evidence: `/private/tmp/mtr-theme-qa/`, including `settings-restarted-s26.png`,
+  `settings-large-s26.png`, `search-train-s26-final.png`, `station-s26.png`, `facilities-s26.png`,
+  `landscape-s26.png` and `search-train-web-final.jpg`.
+- Limits: the AVD uses Google's Android image; Samsung One UI and the unavailable Samsung frame
+  were not tested. iOS is source-reviewed and bundle-exported only. No physical device, TalkBack/
+  VoiceOver traversal, tablet, device storage-failure injection or airplane-mode runtime test.
+  Storage failures and stale/error transitions were assertion-tested; exports do not prove native behavior.
 
 ## Reporting
 
@@ -644,3 +693,47 @@ fixtures, without a native older nonempty record in the inspected viewport.
 The AVD booted with a launcher crash and an incorrect 320×480 physical display. Runtime
 size/density overrides of 1080×1440 and 320 dpi made it usable for these tests. These emulator
 settings were retained for manual testing. No application data was cleared.
+
+## Little Twin Stars icons and railway — 2026-11-05
+
+- Added custom 24-unit shooting-star, train and wheelchair/star tab icons, a sky-to-blush gradient,
+  and an 88-unit cloud railway strip below the scroll area on the five main screen implementations.
+- `npm run check` passed all 20 Doctor checks. Final typecheck and all-platform export passed.
+- Web runtime covered 390×844 and desktop, all three tabs, keyboard theme switching, expanded
+  favorite and search-selection preservation. Temporary favorite removed after verification.
+- Verified S26 AVD boot identity and 1440×3120/480 dpi before Android checks through Expo Go.
+  All tabs and theme round-trip were exercised. Rechecked themed Settings at the bottom of its
+  scroll area, with enlarged text and landscape after waiting for confirmed selected-theme hydration.
+- Impeccable review found P2 track/control overlap and P3 uneven tie endpoints in the first pass.
+  Reserved the railway strip outside scrolling content and aligned all ties across both rails.
+  Unique gradient IDs also fix web rendering across retained screen instances. Decorative vectors
+  ignore touch and accessibility traversal, with the tab owning its accessible label.
+- Native evidence and web captures use `/private/tmp/mtr-theme-qa/railway-*`. Initial large-text
+  and landscape captures were loading states and were discarded as verification evidence.
+- iOS runtime, physical hardware, One UI and spoken VoiceOver/TalkBack traversal remain untested.
+
+The final native landscape pass also found a P2 gradient seam at the old portrait width.
+Explicit window dimensions on the SVG and gradient rectangle fixed it. Recaptured after theme
+hydration in `railway-landscape-fixed-s26.png`, then restored portrait orientation. Text contrast
+across the new background stops is at least 5.55:1 for secondary text and 10.28:1 for primary
+text/icon outlines. The final export and typecheck passed after this correction.
+
+Independent Impeccable verdict passes confirmed the P2 overlap, P3 ties and P2 landscape seam
+resolved against their recaptured evidence. The documentation check matched the implemented
+screen placements, strip height and icons to DESIGN.md and the existing color metadata.
+
+### Compact Little Twin Stars tab covers · 2026-11-05
+
+- Select the theme and visit 收藏, 搜尋 and 設施. Check the ticket album, route map
+  and station lift respectively. Each cover should fill the content width at a 3:1 aspect ratio and scroll with content. Each tab has one named navigation action and
+  keeps its selected indicator when tapped.
+- Opened all three tabs on web at 390 × 844 and on the verified
+  Samsung_Galaxy_S26_Ultra_API_36 AVD at 1440 × 3120, 480 dpi. The browser
+  loaded all three local JPEGs at 276 × 92. Runtime captures are in
+  `/private/tmp/mtr-theme-qa/cover-{web,native}-*`.
+- `npm run check` and `npm run export:all` passed. iOS runtime and spoken
+  screen-reader output were outside this visual pass.
+- Impeccable found a P2 Android layout issue in `LittleTwinStarsArtwork.tsx`.
+  The percentage-width cover reserved extra vertical space and left the JPEG
+  corners square. Using a 276-unit preferred width constrained by the parent
+  restored rounded corners and the normal gap before controls on the S26 AVD.

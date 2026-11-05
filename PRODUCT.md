@@ -16,4 +16,4 @@ Expo SDK 58, React Native, Expo Router and React Native Paper. Preserve station 
 
 ## Brand commitments
 
-Material controls and train/star icons. System Chinese typography. The approved redesign replaces the oversized logo and blue header. Follow system light/dark appearance by default, with saved light/dark overrides in Settings.
+Material controls and train/star icons. System Chinese typography. The approved redesign replaces the oversized logo and blue header. Follow system light/dark appearance by default, with saved light/dark overrides in Settings. The optional Little Twin Stars appearance is always light, with pastel surfaces and locally bundled Kiki and Lala artwork outside the arrival data.

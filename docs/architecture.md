@@ -8,7 +8,7 @@ The project uses Expo SDK 58, React Native 0.88, React 19.3, and Expo Router.
 Expo-compatible native module versions take precedence over independent npm latest tags,
 so JavaScript and native binaries remain compatible. npm records exact resolutions in the lockfile.
 
-`app/_layout.tsx` owns the root Stack, preference-selected light/dark Paper theme,
+`app/_layout.tsx` owns the root Stack, preference-selected Paper theme,
 icon provider and status bar. Shared tokens live in `ui/theme.ts`. Native appearance
 uses SDK-matched `expo-system-ui`; app configuration permits landscape. Rebuild native
 clients after these configuration changes.
@@ -55,10 +55,17 @@ Station detail instances are keyed by station code; request generations discard 
 
 `api/FrequentStationsApi.ts` uses AsyncStorage key `favorite_station_list`, storing a JSON
 array of station-code strings. Keep that key and representation compatible across upgrades.
-Paper renders controls and typography; Expo vector icons supply Paper icons, including the train and star tab icons.
+Paper renders controls and typography. Expo vector icons supply Paper icons and the standard tab icons.
 
-`AppearanceProvider` owns the session appearance and resolves `system`, `light`, or `dark`
-against the device color scheme. AsyncStorage key `appearance_preference` stores that string
+`AppearanceProvider` owns the session appearance. `system` follows the device; `light`, `dark`,
+and `little-twin-stars` are fixed overrides. The Little Twin Stars option uses a light Paper palette
+and the corresponding dark status-bar icons. `LittleTwinStarsArtwork` selects a bundled 3:1 JPEG
+cover for each tab through its `cover` prop. Each cover fills the content width at a 3:1 aspect ratio. Settings
+and station-specific screens use the official portrait PNG. See the [asset notes](../assets/themes/little-twin-stars/README.md)
+for image sources. The shared SVG background stays behind content, with an 88-unit railway strip
+reserved below the scroller. `LittleTwinStarsTabIcon` draws 24-unit SVGs combining Kiki or Lala
+with the star, magnifier and wheelchair symbols. Paper supplies the tab labels and selected
+indicators. AsyncStorage key `appearance_preference` stores the selected string
 independently of favorites. Missing/invalid values use `system`; read failures use system
 with feedback, and save failures keep the current session choice with retry guidance.
 Controls wait for the initial read and serialize changes while saving. Theme changes update

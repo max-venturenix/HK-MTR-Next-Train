@@ -1,3 +1,4 @@
+import LittleTwinStarsBackground, {LittleTwinStarsRailway} from "../../component/LittleTwinStarsBackground";
 import {useStationArrivals} from "../../hooks/useStationArrivals";
 import StationArrivals from "../../component/StationArrivals";
 import {useEffect, useState} from "react";
@@ -8,6 +9,7 @@ import {Button, IconButton, Text, useTheme} from "react-native-paper";
 import * as FrequentStationsApi from "../../../api/FrequentStationsApi";
 import {mtrStationInfo} from "../../../data/MTRStationInfo";
 import {layout} from "../../theme";
+import LittleTwinStarsArtwork from "../../component/LittleTwinStarsArtwork";
 
 export default function NextTrainByStationScreen({stationCode}: {stationCode: string}) {
     const [isFavorite, setIsFavorite] = useState(false);
@@ -35,6 +37,7 @@ export default function NextTrainByStationScreen({stationCode}: {stationCode: st
         } finally { setSavingFavorite(false); }
     };
     return <SafeAreaView edges={["left", "right", "bottom"]} style={[layout.screen, {backgroundColor: colors.background}]}>
+        <LittleTwinStarsBackground/>
         <Stack.Screen options={{title: mtrStationInfo[stationCode].chineseName,
             headerRight: () => <IconButton icon={isFavorite ? "star" : "star-outline"} size={24}
                 style={{width: 48, height: 48}} iconColor={colors.primary}
@@ -50,9 +53,11 @@ export default function NextTrainByStationScreen({stationCode}: {stationCode: st
                     onPress={() => void refresh()}>重新整理</Button>
             </View>
             {favoriteError && <Text accessibilityRole="alert" style={{color: colors.error}}>{favoriteError}</Text>}
+            <LittleTwinStarsArtwork compact/>
             <Button mode="outlined" icon="wheelchair-accessibility" contentStyle={layout.button}
                 onPress={() => router.push({pathname: "/station/[stationCode]/facilities", params: {stationCode}})}>查看設施狀況</Button>
             <StationArrivals stationCode={stationCode} results={results}/>
         </ScrollView>
+        <LittleTwinStarsRailway/>
     </SafeAreaView>;
 }

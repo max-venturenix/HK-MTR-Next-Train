@@ -1,3 +1,4 @@
+import LittleTwinStarsBackground, {LittleTwinStarsRailway} from "../../component/LittleTwinStarsBackground";
 import {useState} from "react";
 import {Linking, Platform, SectionList, View} from "react-native";
 import {Stack, useIsFocused} from "expo-router";
@@ -9,6 +10,7 @@ import {mtrStationInfo} from "../../../data/MTRStationInfo";
 import LineMarkers from "../../component/LineMarkers";
 import {useFacilityOutages} from "../../hooks/useFacilityOutages";
 import {layout} from "../../theme";
+import LittleTwinStarsArtwork from "../../component/LittleTwinStarsArtwork";
 
 export default function FacilityOutageScreen({stationCode}: {stationCode?: string}) {
     const {colors} = useTheme();
@@ -29,6 +31,7 @@ export default function FacilityOutageScreen({stationCode}: {stationCode?: strin
             "沒有符合目前篩選條件的設施通告。";
     return <SafeAreaView edges={stationCode ? ["left", "right", "bottom"] : ["top", "left", "right"]}
         style={[layout.screen, {backgroundColor: colors.background, display: focused ? "flex" : "none"}]}>
+        <LittleTwinStarsBackground/>
         {stationCode && <Stack.Screen options={{title: `${mtrStationInfo[stationCode].chineseName}設施`}}/>}
         <SectionList sections={web ? [] : sections} keyExtractor={item => item.id}
             stickySectionHeadersEnabled={false} keyboardShouldPersistTaps="handled"
@@ -37,6 +40,7 @@ export default function FacilityOutageScreen({stationCode}: {stationCode?: strin
             ListHeaderComponent={<View style={layout.section}>
                 <Text variant="headlineLarge" accessibilityRole="header">設施服務狀況</Text>
                 {stationCode && <Text variant="titleLarge">{mtrStationInfo[stationCode].chineseName}</Text>}
+                <LittleTwinStarsArtwork compact cover={stationCode ? undefined : "facilities"}/>
                 {web ? <>
                     <Text variant="bodyLarge">網頁版請前往港鐵網站查閱設施資訊。即時設施通告可於本應用程式的 iOS 或 Android 版本查看。</Text>
                     <Button mode="contained" icon="open-in-new" contentStyle={layout.button}
@@ -87,5 +91,6 @@ export default function FacilityOutageScreen({stationCode}: {stationCode?: strin
                 <Text variant="bodyMedium" style={{color: colors.onSurfaceVariant}}>資料來源：港鐵。工程及恢復服務安排以港鐵最新公布為準。</Text>
                 <Button icon="open-in-new" contentStyle={layout.button} onPress={() => open(facilityInformationUrl)}>港鐵設施資訊</Button>
             </View>}/>
+        <LittleTwinStarsRailway/>
     </SafeAreaView>;
 }

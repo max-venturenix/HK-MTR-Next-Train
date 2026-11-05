@@ -4,7 +4,7 @@ import {AccessibilityInfo, AppState} from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import {useEffect, useState} from "react";
 import {PaperProvider, ThemeProvider} from "react-native-paper";
-import {darkTheme, lightTheme} from "../ui/theme";
+import {darkTheme, lightTheme, littleTwinStarsTheme} from "../ui/theme";
 import {AppearanceProvider, useAppearance} from "../ui/context/AppearanceContext";
 
 import {initializeFacilityNotifications, subscribeToFacilityNotifications} from "../services/facilityNotifications";
@@ -16,8 +16,8 @@ export default function RootLayout() {
 }
 
 function ThemedLayout() {
-    const {dark} = useAppearance();
-    const baseTheme = dark ? darkTheme : lightTheme;
+    const {dark, preference} = useAppearance();
+    const baseTheme = preference === "little-twin-stars" ? littleTwinStarsTheme : dark ? darkTheme : lightTheme;
     const [reduceMotion, setReduceMotion] = useState(false);
     useEffect(() => {
         const initialize = () => { void initializeFacilityNotifications().catch(error => console.warn("Facility monitor", error)); };

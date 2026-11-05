@@ -1,9 +1,11 @@
+import LittleTwinStarsBackground, {LittleTwinStarsRailway} from "../../component/LittleTwinStarsBackground";
 import Constants from "expo-constants";
 import {Platform, ScrollView, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {Icon, Text, TouchableRipple, useTheme} from "react-native-paper";
 import {useAppearance} from "../../context/AppearanceContext";
 import {layout} from "../../theme";
+import LittleTwinStarsArtwork, {LittleTwinStarsThumbnail} from "../../component/LittleTwinStarsArtwork";
 
 import FacilityNotificationSettings from "../../component/FacilityNotificationSettings";
 
@@ -12,6 +14,7 @@ export default function SettingsScreen() {
     const {preference, ready, saving, error, setPreference} = useAppearance();
     return <SafeAreaView edges={["left", "right", "bottom"]}
         style={[layout.screen, {backgroundColor: colors.background}]}>
+        <LittleTwinStarsBackground/>
         <ScrollView contentContainerStyle={[layout.content, {flexGrow: 1}]}>
             <View style={layout.section}>
                 <Text variant="titleLarge" accessibilityRole="header">外觀</Text>
@@ -19,7 +22,8 @@ export default function SettingsScreen() {
                 <View accessibilityRole="radiogroup" accessibilityLabel="外觀"
                     style={{backgroundColor: colors.surface, borderRadius: 12, overflow: "hidden"}}>
                     {([{value: "system", label: "跟隨系統"}, {value: "light", label: "淺色"},
-                        {value: "dark", label: "深色"}] as const).map(({value, label}) => (
+                        {value: "dark", label: "深色"},
+                        {value: "little-twin-stars", label: "Little Twin Stars（雙子星）"}] as const).map(({value, label}) => (
                         <TouchableRipple key={value} accessibilityRole="radio" accessibilityLabel={label}
                             accessibilityState={{checked: preference === value, disabled: !ready || saving}}
                             aria-checked={preference === value} disabled={!ready || saving}
@@ -31,6 +35,7 @@ export default function SettingsScreen() {
                             } : undefined}
                             onPress={() => void setPreference(value)}>
                             <View style={[layout.heading, {minHeight: 56, padding: 16}]}>
+                                {value === "little-twin-stars" && <LittleTwinStarsThumbnail/>}
                                 <Text variant="bodyLarge" style={layout.grow}>{label}</Text>
                                 <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
                                     <Icon source={preference === value ? "radiobox-marked" : "radiobox-blank"}
@@ -42,6 +47,11 @@ export default function SettingsScreen() {
                 </View>
                 {!ready && <Text accessibilityLiveRegion="polite" accessibilityRole={Platform.OS === "web" ? "status" : undefined}>正在讀取外觀設定…</Text>}
                 {error && <Text accessibilityRole="alert" style={{color: colors.error}}>{error}</Text>}
+                {preference === "little-twin-stars" && <View style={{gap: 8}}>
+                    <LittleTwinStarsArtwork/>
+                    <Text variant="bodyMedium" style={{color: colors.onSurfaceVariant}}>雙子星主題採用淺色外觀，不隨系統切換。</Text>
+                    <Text variant="bodySmall" style={{color: colors.onSurfaceVariant}}>Little Twin Stars © SANRIO CO., LTD.</Text>
+                </View>}
             </View>
             <FacilityNotificationSettings/>
             <View style={{marginTop: "auto", paddingTop: 24, gap: 8, alignItems: "center"}}>
@@ -49,5 +59,6 @@ export default function SettingsScreen() {
                 <Text variant="bodyMedium" style={{color: colors.onSurfaceVariant}}>Development by Max Wong</Text>
             </View>
         </ScrollView>
+        <LittleTwinStarsRailway/>
     </SafeAreaView>;
 }

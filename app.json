@@ -2,7 +2,7 @@
   "expo": {
     "name": "MTR Next Train",
     "slug": "mtr-next-train",
-    "version": "2.2.2",
+    "version": "2.3.0",
     "orientation": "default",
     "icon": "./assets/ic_launcher.png",
     "userInterfaceStyle": "automatic",
@@ -15,7 +15,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.sps99133.mtrnexttrain",
-      "versionCode": 6
+      "versionCode": 7
     },
     "web": {
       "favicon": "./assets/favicon.png",

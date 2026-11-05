@@ -2,10 +2,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {createContext, ReactNode, useContext, useEffect, useRef, useState} from "react";
 import {useColorScheme} from "react-native";
 
-type AppearancePreference = "system" | "light" | "dark";
+type AppearancePreference = "system" | "light" | "dark" | "little-twin-stars";
 const storageKey = "appearance_preference";
 const isPreference = (value: string | null): value is AppearancePreference =>
-    value === "system" || value === "light" || value === "dark";
+    value === "system" || value === "light" || value === "dark" || value === "little-twin-stars";
 
 const AppearanceContext = createContext<{
     preference: AppearancePreference;
