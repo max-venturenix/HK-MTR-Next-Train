@@ -110,6 +110,9 @@ async function verifyAlerts() {
     let task;
     let registered = false;
     let granted = true;
+    let responseListener;
+    let lastResponse = null;
+    let responseRemoved = false;
     const deliveries = [];
     const triggers = [];
     const mocks = {
@@ -125,7 +128,11 @@ async function verifyAlerts() {
             registerTaskAsync: async (_, options) => { assert.equal(options.minimumInterval, 15); registered = true; },
             unregisterTaskAsync: async () => { registered = false; }},
         "expo-task-manager": {defineTask: (_, fn) => { task = fn; }, isTaskRegisteredAsync: async () => registered},
-        "expo-notifications": {AndroidImportance: {HIGH: 4},
+        "expo-notifications": {
+            addNotificationResponseReceivedListener: listener => { responseListener = listener; return {remove: () => { responseRemoved = true; }}; },
+            getLastNotificationResponseAsync: async () => lastResponse,
+            clearLastNotificationResponseAsync: async () => {},
+            AndroidImportance: {HIGH: 4},
             SchedulableTriggerInputTypes: {TIME_INTERVAL: "timeInterval"}, setNotificationHandler: () => {},
             setNotificationChannelAsync: async (_, options) => {
                 assert.equal(Object.hasOwn(options, "sound"), false,
@@ -187,41 +194,48 @@ async function verifyAlerts() {
     notices = [];
     await task();
     assert.deepEqual(history().at(-1).facilities, []);
+    assert.equal(deliveries.at(-1).data.kind, "facility-recovery");
+    assert.equal(deliveries.at(-1).title, "鑽石山站無障礙設施已恢復服務");
+    assert.ok(deliveries.at(-1).body.includes("升降機（Concourse）"));
+    assert.ok(deliveries.at(-1).body.endsWith("已恢復服務。"));
+    assert.equal(history().at(-1).notifications, 1);
+    await task();
+    assert.equal(deliveries.length, 2, "recovery is not repeated");
     notices = [second];
     await task();
-    assert.equal(deliveries.length, 2, "outage returning after clearance alerts again");
+    assert.equal(deliveries.length, 3, "outage returning after clearance alerts again");
     favorites = ["HOK"];
     await monitor.bookmarksChanged();
     favorites = ["HOK", "DIH"];
     await monitor.bookmarksChanged();
     await task();
-    assert.equal(deliveries.length, 2, "newly added bookmark gets a silent baseline");
+    assert.equal(deliveries.length, 3, "newly added bookmark gets a silent baseline");
     notices.push({...second, stationCode: "AIR"});
     await monitor.setAlertSettings(true, "all");
-    assert.equal(deliveries.length, 2, "expanded scope baselines new stations");
+    assert.equal(deliveries.length, 3, "expanded scope baselines new stations");
     notices.push(third, {...third, stationCode: "HOK"});
     failStation = "HOK";
     assert.equal(await task(), 2);
-    assert.equal(deliveries.length, 3);
+    assert.equal(deliveries.length, 4);
     assert.equal(history().at(-1).reason, "讀取設施資料後處理失敗");
     assert.equal(history().at(-1).notifications, 1);
     failStation = undefined;
     await task();
-    assert.equal(deliveries.length, 4, "failed station retries without repeating successful station");
+    assert.equal(deliveries.length, 5, "failed station retries without repeating successful station");
     assert.equal(deliveries.at(-1).data.stationCode, "HOK");
     granted = false;
     notices.push({...third, facilityId: "4"});
     await task();
     assert.equal(history().at(-1).stage, "skipped");
     assert.equal(history().at(-1).apiCalled, false);
-    assert.equal(deliveries.length, 4, "revoked permission prevents delivery");
+    assert.equal(deliveries.length, 5, "revoked permission prevents delivery");
     await monitor.setAlertSettings(false, "favorites");
     assert.equal(registered, false);
     await assert.rejects(monitor.setAlertSettings(true, "favorites"));
     assert.equal(JSON.parse(stored).enabled, false, "permission denial keeps alerts off");
     granted = true;
     await monitor.setAlertSettings(true, "favorites");
-    assert.equal(deliveries.length, 4, "re-enable silently baselines again");
+    assert.equal(deliveries.length, 5, "re-enable silently baselines again");
     failLog = true;
     assert.equal(await task(), 1, "log write failure preserves enabled check success");
     failLog = false;
@@ -233,7 +247,7 @@ async function verifyAlerts() {
     failLog = false;
     const beforeTest = stored;
     await monitor.sendTestNotification();
-    assert.equal(deliveries.length, 5, "test notification sends immediately with monitoring off");
+    assert.equal(deliveries.length, 6, "test notification sends immediately with monitoring off");
     assert.equal(deliveries.at(-1).title, "樂富站升降機停用（測試）");
     assert.equal(deliveries.at(-1).body, "這是測試訊息，模擬樂富站升降機暫停服務。");
     assert.equal(deliveries.at(-1).sound, true);
@@ -242,7 +256,7 @@ async function verifyAlerts() {
     assert.equal(registered, false, "test does not register background monitoring");
     assert.deepEqual(triggers.at(-1), {channelId: "accessible-facility-outages"});
     await monitor.sendTestNotification(10);
-    assert.equal(deliveries.length, 6, "delayed test is submitted to Android's scheduler");
+    assert.equal(deliveries.length, 7, "delayed test is submitted to Android's scheduler");
     assert.equal(deliveries.at(-1).title, "樂富站升降機停用（測試）");
     assert.equal(deliveries.at(-1).body, "這是測試訊息，模擬樂富站升降機暫停服務。");
     assert.deepEqual(triggers.at(-1), {type: "timeInterval", seconds: 10, repeats: false,
@@ -250,7 +264,7 @@ async function verifyAlerts() {
     assert.equal(stored, beforeTest, "delayed test leaves monitoring unchanged");
     granted = false;
     await assert.rejects(monitor.sendTestNotification());
-    assert.equal(deliveries.length, 6, "permission denial prevents a test notification");
+    assert.equal(deliveries.length, 7, "permission denial prevents a test notification");
     const log = require("../services/facilityActivityLog.ts");
     const now = Date.now();
     historyStore.set("facility_activity_log_v1", JSON.stringify([...history(),
@@ -271,7 +285,94 @@ async function verifyAlerts() {
     const count = logs.length;
     await reloaded.getFacilityActivity();
     assert.equal(history().length, count, "viewing history adds no run");
+    granted = true;
+    favorites = ["DIH"];
+    stored = JSON.stringify({enabled: true, scope: "favorites", stations: {DIH: [JSON.stringify(["DIH", "legacy"])]}});
+    notices = [];
+    await task();
+    assert.equal(deliveries.at(-1).body, "已記錄的無障礙設施已恢復服務。");
+    assert.equal(deliveries.at(-1).data.kind, "facility-recovery");
+    notices = [{...second, stationCode: "UNKNOWN"}];
+    await monitor.setAlertSettings(true, "all");
+    const beforeUnknownRecovery = deliveries.length;
+    notices = [];
+    await task();
+    assert.equal(deliveries.length, beforeUnknownRecovery + 1, "all-stations retains previously observed unknown stations");
+    assert.equal(deliveries.at(-1).data.stationCode, "UNKNOWN");
+    assert.equal(history().at(-1).notifications, 1);
+    await monitor.initializeFacilityNotifications();
+    assert.equal(deliveries.length, beforeUnknownRecovery + 1, "restart does not repeat recovery");
+    const response = (identifier, kind) => ({notification: {request: {identifier, content: {data: {kind}}}}});
+    lastResponse = response("cold", "facility-recovery");
+    let navigations = 0;
+    const unsubscribe = monitor.subscribeToFacilityNotifications(() => { navigations++; });
+    await Promise.resolve();
+    assert.equal(navigations, 1, "cold-start recovery response opens facilities");
+    responseListener(lastResponse);
+    assert.equal(navigations, 1, "duplicate response is ignored");
+    for (const kind of ["facility-recovery", "facility-outage", "facility-test"]) responseListener(response(kind, kind));
+    assert.equal(navigations, 4, "all supported notification kinds open facilities");
+    responseListener(response("unrelated", "other"));
+    assert.equal(navigations, 4);
+    unsubscribe();
+    assert.equal(responseRemoved, true);
+    responseListener(response("after-unsubscribe", "facility-recovery"));
+    assert.equal(navigations, 4);
     console.log("Background activity success, empty, skip, failure, expiry, interruption and isolation assertions passed.");
     console.log("Android monitor baselines, grouping, deduplication, failures, scope, permission and cancellation assertions passed.");
 }
-verifyAlerts().catch(error => { console.error(error); process.exitCode = 1; });
+async function verifyRecoveryComparison() {
+    const {compareFacilityAlerts, facilityKey, retainAlertStations, initialAlertState} = require("../data/facilityAlertMonitor.ts");
+    let state = {...initialAlertState(), enabled: true};
+    const events = [];
+    let rejectEvent;
+    const a = feed.notices[0];
+    const b = {...a, facilityId: "B", name: "輪椅升降台"};
+    const c = {...a, facilityId: "C"};
+    const save = async value => { state = JSON.parse(JSON.stringify(value)); };
+    const check = (rows, monitored = ["DIH"]) => compareFacilityAlerts(state, rows, monitored, save,
+        async (station, facilities, event) => {
+            if (event === rejectEvent) throw new Error("Rejected");
+            events.push({station, facilities, event});
+        });
+    await check([a, b, b]);
+    assert.equal(events.length, 0);
+    await check([{...a, facilityType: "ES", message: "Changed", id: "changed"}, b]);
+    assert.equal(events.length, 0, "classification and notice wording do not imply recovery");
+    await check([b]);
+    assert.equal(events.at(-1).event, "recovery");
+    assert.deepEqual(events.at(-1).facilities, [{name: a.name, location: a.location}]);
+    await check([b]);
+    assert.equal(events.length, 1);
+    rejectEvent = "recovery";
+    await assert.rejects(check([c, c]));
+    assert.equal(events.at(-1).event, "outage");
+    assert.ok(state.stations.DIH.includes(facilityKey(c)));
+    assert.ok(state.stations.DIH.includes(facilityKey(b)), "failed recovery stays pending");
+    rejectEvent = undefined;
+    await check([c]);
+    assert.equal(events.filter(row => row.event === "outage").length, 1, "successful outage is not repeated on recovery retry");
+    assert.equal(events.at(-1).event, "recovery");
+    rejectEvent = "outage";
+    await assert.rejects(check([a]));
+    assert.ok(!state.stations.DIH.includes(facilityKey(c)), "successful recovery stays committed when outage fails");
+    rejectEvent = undefined;
+    await check([a]);
+    assert.equal(events.at(-1).event, "outage");
+    await check([]);
+    assert.deepEqual(state.details, {});
+    await check([a]);
+    assert.equal(events.at(-1).event, "outage", "recurrence alerts again");
+    const beforeRemoval = events.length;
+    await check([], []);
+    assert.equal(events.length, beforeRemoval, "scope removal is silent");
+    assert.deepEqual(state.details, {});
+    await check([a]);
+    assert.equal(events.length, beforeRemoval, "re-added station baselines silently");
+    assert.deepEqual(retainAlertStations(state, []).details, {});
+    state = {enabled: true, scope: "favorites", stations: {DIH: [facilityKey(a)]}};
+    await check([]);
+    assert.deepEqual(events.at(-1).facilities, [undefined], "legacy keys recover without metadata");
+    console.log("Recovery baseline, identity, metadata, scope and independent event retry assertions passed.");
+}
+verifyRecoveryComparison().then(verifyAlerts).catch(error => { console.error(error); process.exitCode = 1; });

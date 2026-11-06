@@ -5,7 +5,7 @@ import * as Notifications from "expo-notifications";
 import {getFacilityOutages, InvalidFacilityFeedError} from "../api/FacilityOutageApi";
 import {getFavoriteStations} from "../api/FrequentStationsApi";
 import {mtrStationInfo} from "../data/MTRStationInfo";
-import {AlertScope, compareFacilityAlerts, FacilityAlertState, initialAlertState} from "../data/facilityAlertMonitor";
+import {AlertScope, compareFacilityAlerts, FacilityAlertState, initialAlertState, retainAlertStations} from "../data/facilityAlertMonitor";
 
 import {isAccessibleFacility} from "../data/facilityOutages";
 import {FacilityActivity, saveFacilityActivity} from "./facilityActivityLog";
@@ -28,13 +28,17 @@ async function read(): Promise<FacilityAlertState> {
         !Object.values(parsed.stations).every(keys => Array.isArray(keys) && keys.every(key => typeof key === "string"))) {
         throw new Error("Invalid facility alert settings");
     }
+    if (parsed.details !== undefined && (!parsed.details || typeof parsed.details !== "object" || Array.isArray(parsed.details) ||
+        !Object.values(parsed.details).every(detail => detail && typeof detail.name === "string" && typeof detail.location === "string"))) {
+        throw new Error("Invalid facility alert details");
+    }
     return parsed;
 }
 const save = (state: FacilityAlertState) => AsyncStorage.setItem(storageKey, JSON.stringify(state));
 const permitted = async () => (await Notifications.getPermissionsAsync()).granted;
 async function channel() {
     // Omitting sound selects Android's default. A string is treated as a bundled filename.
-    await Notifications.setNotificationChannelAsync(channelId, {name: "無障礙設施停用通知",
+    await Notifications.setNotificationChannelAsync(channelId, {name: "無障礙設施停用及恢復通知",
         importance: Notifications.AndroidImportance.HIGH});
 }
 async function requestNotificationPermission() {
@@ -77,15 +81,18 @@ async function check(activity?: FacilityActivity) {
     await progress({stage: "requesting", apiCalled: true});
     const feed = await getFacilityOutages();
     const monitored = state.scope === "favorites" ? [...new Set(favorites)] :
-        [...new Set([...Object.keys(mtrStationInfo), ...feed.notices.map(notice => notice.stationCode)])];
+        [...new Set([...Object.keys(mtrStationInfo), ...Object.keys(state.stations), ...feed.notices.map(notice => notice.stationCode)])];
     await progress({stage: "feed-read", stationsChecked: monitored.length,
         facilities: feed.notices.filter(notice => monitored.includes(notice.stationCode) && isAccessibleFacility(notice))
             .map(({stationCode, name, location, message, english}) => ({stationCode, name, location, message, english}))});
-    await compareFacilityAlerts(state, feed.notices, monitored, save, async (stationCode, notices) => {
+    await compareFacilityAlerts(state, feed.notices, monitored, save, async (stationCode, facilities, event) => {
         const name = Object.hasOwn(mtrStationInfo, stationCode) ? mtrStationInfo[stationCode].chineseName : stationCode;
-        await Notifications.scheduleNotificationAsync({content: {title: `${name}站無障礙設施停用`,
-            body: notices.map(notice => `${notice.name}${notice.location ? `（${notice.location}）` : ""}`).join("、"),
-            sound: true, data: {kind: "facility-outage", stationCode}}, trigger: {channelId}});
+        const labels = facilities.map(facility => facility ?
+            `${facility.name}${facility.location ? `（${facility.location}）` : ""}` : "已記錄的無障礙設施").join("、");
+        await Notifications.scheduleNotificationAsync({content: {
+            title: `${name}站無障礙設施${event === "recovery" ? "已恢復服務" : "停用"}`,
+            body: event === "recovery" ? `${labels}已恢復服務。` : labels,
+            sound: true, data: {kind: event === "recovery" ? "facility-recovery" : "facility-outage", stationCode}}, trigger: {channelId}});
         await progress({notifications: (activity?.notifications ?? 0) + 1});
     });
     await progress({stage: "success"});
@@ -125,7 +132,7 @@ export const setAlertSettings = (enabled: boolean, scope: AlertScope) => seriali
     const favorites = await getFavoriteStations();
     const stations = enabled && state.enabled ? Object.fromEntries(Object.entries(state.stations)
         .filter(([code]) => scope === "all" || favorites.includes(code))) : {};
-    await save({enabled, scope, stations});
+    await save(retainAlertStations({...state, enabled, scope, stations}, Object.keys(stations)));
     if (!enabled) { await unregister(); return; }
     await register();
     try { await check(); } catch { throw new Error("已啟用通知，暫時無法完成檢查，稍後會自動重試。"); }
@@ -134,7 +141,7 @@ export const bookmarksChanged = () => serialize(async () => {
     const state = await read();
     if (state.scope !== "favorites") return;
     const favorites = await getFavoriteStations();
-    await save({...state, stations: Object.fromEntries(Object.entries(state.stations).filter(([code]) => favorites.includes(code)))});
+    await save(retainAlertStations(state, favorites));
 });
 export const initializeFacilityNotifications = () => serialize(async () => {
     const state = await read();
@@ -149,7 +156,7 @@ export function subscribeToFacilityNotifications(listener: () => void) {
     const handle = (response: Notifications.NotificationResponse | null) => {
         if (!active || !response) return;
         const kind = response.notification.request.content.data?.kind;
-        if (kind !== "facility-outage" && kind !== "facility-test") return;
+        if (kind !== "facility-outage" && kind !== "facility-recovery" && kind !== "facility-test") return;
         if (lastId === response.notification.request.identifier) return;
         lastId = response.notification.request.identifier;
         listener();

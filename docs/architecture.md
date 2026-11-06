@@ -117,7 +117,8 @@ release builds can initialize background scheduling at startup.
 
 Settings defaults alerts off and scope to favorites. The independent AsyncStorage key
 `facility_alert_state_v1` stores enabled/scope preferences and per-station observed facility
-keys. Existing `favorite_station_list` remains a JSON string array. Successful bookmark
+keys, plus optional facility name/location metadata for recovery notifications. Older key-only states
+remain readable. Existing `favorite_station_list` remains a JSON string array. Successful bookmark
 writes invalidate removed stations' baselines. Newly monitored stations silently establish
 baselines on their first successful check. Re-enabling alerts starts fresh baselines.
 The Android service serializes preference changes, bookmark invalidation and checks.
@@ -125,18 +126,24 @@ Foreground startup/resume also reconciles registration and checks enabled alerts
 
 The existing XML parser and AJ/VJ/HJ/MJ classifier supply observations. Station/facility ID
 identifies an ongoing outage, falling back to notice ID. Failed requests and malformed XML
-preserve observations. A successful feed absence clears the observed outage so recurrence
-can alert. Each station's new facilities share one Traditional Chinese local notification.
+preserve observations. A facility absent from a successful valid feed, including a valid empty feed,
+generates a recovery
+notification and clears the observed outage so recurrence can alert. Presence is checked against the
+complete feed, so classification changes alone do not indicate recovery. Each station's new outages
+and recovered facilities form separate Traditional Chinese local notifications. Recovery uses saved
+names/locations, with generic wording for older states without metadata. All-stations monitoring
+retains previously observed station codes, even when absent from metadata and the latest feed.
 A high-importance channel requests sound and a banner, subject to system settings.
 The notifications config plugin bundles `assets/notification-icon.png` as the small icon
 for facility alerts and test messages. Android tints the train glyph in the status bar and
 on the left of each notification. Rebuild the native app to apply it.
-Tapping an outage alert or either developer-screen test notification opens the main 設施 tab (`/facilities`).
+Tapping an outage/recovery alert or either developer-screen test notification opens the main 設施 tab (`/facilities`).
 No push token or backend is required. Other platforms show Android availability information.
 
-Before notification submission, a station snapshot is persisted to avoid repeating an alert
+Before each outage or recovery notification submission, its state transition is persisted to avoid
+repeating an alert
 if Android terminates the process after submission. A rejected submission restores that
-station's previous snapshot for retry, while other stations retain their progress. A process
+event's previous snapshot for retry, while successful events and other stations retain their progress. A process
 termination between persistence and submission can lose that alert. Storage and Android's
 notification service cannot commit atomically. Reinstalling or clearing app data resets history.
 

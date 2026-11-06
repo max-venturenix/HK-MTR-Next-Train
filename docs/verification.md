@@ -450,11 +450,15 @@ Use a newly built installed Android app containing the notification/background m
 - The first successful check silently baselines current outages. Two new accessible outages
   at one station produce one Chinese notification naming both. Other stations alert separately.
 - Dismiss and run another check, reopen and reboot. An ongoing outage stays silent.
-  Message/timestamp changes stay silent. A facility absent from one valid feed then returning
-  alerts again. Offline/invalid feeds preserve history and retry later.
+  Message/timestamp/classification changes stay silent. A previously tracked facility absent from
+  one valid feed generates one recovery notification with its saved name/location, including when
+  the feed is empty. Repeated checks/restarts stay silent; returning outages alert again.
+  Offline/invalid feeds preserve history and retry later. Check legacy key-only state uses generic
+  recovery wording. Mixed outage/recovery checks submit separate station notifications; failure of
+  either retries only that event. Scope removals do not imply recovery.
 - Add/remove/re-add bookmarks and switch scopes. Newly monitored stations baseline silently,
   while previously monitored stations still alert for subsequent new outages.
-- Tap a facility outage alert and each developer-screen test notification. Verify the main 設施 tab
+- Tap a facility outage/recovery alert and each developer-screen test notification. Verify the main 設施 tab
   opens when the app is running, in the background, or starting from a closed state.
 - Disable alerts and verify the WorkManager registration is removed. Re-enable and confirm
   existing outages establish fresh silent baselines.
@@ -737,3 +741,64 @@ screen placements, strip height and icons to DESIGN.md and the existing color me
   The percentage-width cover reserved extra vertical space and left the JPEG
   corners square. Using a 276-unit preferred width constrained by the parent
   restored rounded corners and the normal gap before controls on the S26 AVD.
+
+
+### Facility recovery alerts — 2026-11-06
+
+- Facility assertions passed for silent baseline recovery, partial/full removal, valid empty feeds,
+  unchanged identities/classifications, duplicate records, repeat checks, restart, recurrence,
+  older key-only state, metadata cleanup, station scope, permissions, offline/invalid feeds,
+  independent outage/recovery retries, notification content/counts and response handling.
+  Arrival assertions also passed. No test framework or dependency was added.
+- `npm run check` passed all 20 Expo Doctor checks with network access. The first restricted
+  attempt passed TypeScript and local dependency validation, but two online Doctor checks
+  failed because Expo/React Native Directory services were unreachable.
+- `npm run export:all` exported Android, iOS and web. `git diff --check` passed.
+- Impeccable native/web source review of `ui/component/FacilityNotificationSettings.tsx`
+  found no new in-scope issue: the switch's visible/accessibility labels match, checked/disabled
+  semantics remain intact, the Paper row can grow beyond its 64-unit minimum, copy wraps without
+  line limits, and existing semantic theme colors are preserved. Native layout, enlarged text,
+  light/dark presentation and spoken TalkBack output remain unverified; source inspection alone
+  does not establish rendered accessibility or contrast. No runtime audit score is assigned.
+- Android SDK tooling is present, but `adb devices` returned no connected device/emulator.
+  Installed-build foreground/background banners and tapping after app restart were unavailable.
+  iOS/web runtime checks were also not performed. Exported bundles and mocked notification
+  response assertions do not prove native notification delivery or background execution.
+- Context7's Expo SDK 58 notification guidance, the focused UI UX Pro Max searches and
+  Impeccable's native audit guidance informed this change. No native modules/configuration changed.
+
+### S26 Ultra recovery notification runtime verification — 2026-11-06
+
+- Started the `Samsung_Galaxy_S26_Ultra_API_36` AVD, verified by both `emu avd name`
+  and `ro.boot.qemu.avd_name`. Its configured Galaxy skin is missing; cold boot initially
+  used 320×480. Restarted with an explicit 1440×3120 skin and confirmed 480 dpi. This is
+  Google's Android 16 / API 36 image using the S26 Ultra display profile, not Samsung One UI.
+- Generated native projects in `/private/tmp/mtr-recovery-native` from the current source.
+  Both debug and optimized ARM64 release builds succeeded. Installed the locally debug-key-signed
+  release APK over the existing app without clearing its data. No repository native project,
+  dependency, or implementation change was required for this verification.
+- Backed up local storage and staged an observed DIH outage with a synthetic facility ID and
+  saved name/location. The real feed omitted that ID. Foreground monitoring submitted the
+  recovery message with its saved details; tapping opened the main Facilities tab.
+- The debug build required its local Metro connection and did not complete the first forced
+  headless attempt. Release-mode testing removed that dependency. After closing the app process,
+  WorkManager's first forced execution was replaced during process-start reconciliation.
+  Retrying its current job executed the headless callback while the launcher stayed foregrounded.
+  Persisted activity recorded a successful API request and exactly one recovery notification.
+- The recovery notification displayed `鑽石山站無障礙設施已恢復服務` and
+  `升降機（背景測試大堂）已恢復服務。`. After terminating the app process again,
+  tapping the notification opened `設施服務狀況` with the main tab bar. A subsequent forced
+  background check completed successfully with zero notifications, confirming no repeat.
+- Impeccable review of native captures found no new in-scope UI issue in the notification shade
+  or Settings at light/default text and dark/150% text. The switch label, full explanation and
+  scope choices fit, text wraps, semantic checked state is present, and the footer stays reachable.
+  These captures do not establish spoken TalkBack output, tablet layouts, physical-device behavior,
+  audible sound, natural 15-minute scheduling, or reboot execution; those were not tested here.
+- Restored the original DIH favorite, enabled/Favorites monitoring state, baseline/history and
+  system appearance; returned to light OS mode and font scale 1.0. Removed staged recovery data
+  and stopped Metro. Left the current self-contained release build installed and the AVD running.
+- Evidence: `/private/tmp/mtr-recovery-evidence/`, including `foreground-shade.png`,
+  `foreground-tap.png`, `background-shade.png`, `cold-notification-tap.png`,
+  `release-settings-light.png`, `release-settings-dark-large.png`, `background-result.json`,
+  `repeat-result.json` and native build logs. These native results supersede the earlier
+  no-connected-device limitation for the tested scenarios above.

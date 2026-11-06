@@ -33,22 +33,22 @@ export default function FacilityNotificationSettings() {
     };
     if (Platform.OS !== "android") return <View style={layout.section}>
         <Text variant="titleLarge" accessibilityRole="header">通知</Text>
-        <Text variant="bodyLarge" style={{color: colors.onSurfaceVariant}}>無障礙設施停用通知現時支援 Android。</Text>
+        <Text variant="bodyLarge" style={{color: colors.onSurfaceVariant}}>無障礙設施停用及恢復通知現時支援 Android。</Text>
     </View>;
     return <View style={layout.section}>
         <Text variant="titleLarge" accessibilityRole="header">通知</Text>
-        <TouchableRipple accessibilityRole="switch" accessibilityLabel="無障礙設施停用通知"
+        <TouchableRipple accessibilityRole="switch" accessibilityLabel="無障礙設施停用及恢復通知"
             accessibilityState={{checked: settings?.enabled ?? false, disabled: !settings || busy}}
             disabled={!settings || busy} onPress={() => void change(!settings?.enabled, settings?.scope ?? "favorites")}>
             <View style={[layout.heading, {minHeight: 64, backgroundColor: colors.surface, padding: 16, gap: 16}]}>
-                <Text variant="bodyLarge" style={layout.grow}>無障礙設施停用通知</Text>
+                <Text variant="bodyLarge" style={layout.grow}>無障礙設施停用及恢復通知</Text>
                 <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
                     <Switch value={settings?.enabled ?? false} disabled={!settings || busy}/>
                 </View>
             </View>
         </TouchableRipple>
         <Text variant="bodyMedium" style={{color: colors.onSurfaceVariant}}>
-            約每 15 分鐘檢查一次，實際時間會受電池及網絡狀態影響。首次檢查只記錄現有停用設施，其後每次新停用只通知一次。
+            約每 15 分鐘檢查一次，實際時間會受電池及網絡狀態影響。首次檢查只記錄現有停用設施，其後新停用及恢復服務各通知一次。已記錄的設施停用通告從有效資料中消失時，視為恢復服務並通知。
         </Text>
         <Text variant="titleMedium">通知範圍</Text>
         <RadioButton.Group value={settings?.scope ?? "favorites"}
