@@ -4,6 +4,7 @@ import {useFocusEffect} from "expo-router";
 import {getFacilityOutages} from "../../api/FacilityOutageApi";
 import {retryAfter} from "../../api/MTRApi";
 import {FacilityOutageFeed} from "../../data/type/FacilityOutage";
+import {defaultFacilityPollingInterval, getFacilityPollingInterval} from "../../services/facilityPollingInterval";
 
 export function useFacilityOutages() {
     const [feed, setFeed] = useState<FacilityOutageFeed>();
@@ -44,7 +45,10 @@ export function useFacilityOutages() {
         };
         refreshRef.current = refresh;
         void refresh();
-        const timer = setInterval(() => void refresh(), 60000);
+        let timer: ReturnType<typeof setInterval> | undefined;
+        void getFacilityPollingInterval().catch(() => defaultFacilityPollingInterval).then(interval => {
+            if (active) timer = setInterval(() => void refresh(), interval * 60000);
+        });
         const subscription = AppState.addEventListener("change", state => {
             if (state === "active") void refresh();
             else cancel();

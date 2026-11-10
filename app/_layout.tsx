@@ -7,7 +7,7 @@ import {PaperProvider, ThemeProvider} from "react-native-paper";
 import {darkTheme, lightTheme, littleTwinStarsTheme} from "../ui/theme";
 import {AppearanceProvider, useAppearance} from "../ui/context/AppearanceContext";
 
-import {initializeFacilityNotifications, subscribeToFacilityNotifications} from "../services/facilityNotifications";
+import {initializeFacilityNotifications, stopFacilityForegroundChecks, subscribeToFacilityNotifications} from "../services/facilityNotifications";
 
 export const unstable_settings = {anchor: "(tabs)"};
 
@@ -22,12 +22,15 @@ function ThemedLayout() {
     useEffect(() => {
         const initialize = () => { void initializeFacilityNotifications().catch(error => console.warn("Facility monitor", error)); };
         initialize();
-        const appState = AppState.addEventListener("change", state => { if (state === "active") initialize(); });
+        const appState = AppState.addEventListener("change", state => {
+            if (state === "active") initialize();
+            else stopFacilityForegroundChecks();
+        });
         const unsubscribe = subscribeToFacilityNotifications(() => router.navigate("/facilities"));
         let active = true;
         void AccessibilityInfo.isReduceMotionEnabled().then(value => { if (active) setReduceMotion(value); });
         const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
-        return () => { active = false; subscription.remove(); appState.remove(); unsubscribe(); };
+        return () => { active = false; subscription.remove(); appState.remove(); stopFacilityForegroundChecks(); unsubscribe(); };
     }, []);
     const theme = {...baseTheme, animation: {...baseTheme.animation, scale: reduceMotion ? 0 : 1}};
     return (

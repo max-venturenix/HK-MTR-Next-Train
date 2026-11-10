@@ -317,7 +317,7 @@ Manual checks on iOS and Android:
 - Open 設施; confirm 無障礙 initially, switch to 全部, and check escalator notices appear.
 - Search using Chinese/English station names and station codes. Check no-match and empty-feed wording.
 - Open 查看設施狀況 from station arrivals; only that station appears and Back restores arrivals.
-- Check refresh button/pull gesture, 60-second refresh, background/resume and blur cancellation.
+- Check refresh button/pull gesture, the saved interval, background/resume and blur cancellation.
 - Simulate failure after success: retain notices and show stale warning; retry clears the warning.
 - Verify complete MTR messages, alternatives/remarks, timestamps and telephone actions.
 - Check both themes, large text, screen readers, small/landscape layouts and safe areas.
@@ -460,10 +460,10 @@ Use a newly built installed Android app containing the notification/background m
   while previously monitored stations still alert for subsequent new outages.
 - Tap a facility outage/recovery alert and each developer-screen test notification. Verify the main 設施 tab
   opens when the app is running, in the background, or starting from a closed state.
-- Disable alerts and verify the WorkManager registration is removed. Re-enable and confirm
+- Disable alerts and verify the active background registration is removed. Re-enable and confirm
   existing outages establish fresh silent baselines.
 - After enabling, reboot without reopening. Verify a headless check executes with network
-  available. Android schedules at least 15 minutes apart and can defer for power/network.
+  available. Android can defer runs beyond the selected interval for power or network conditions.
   Force-stop requires reopening the app before work resumes.
 - Inspect Settings on a phone/tablet, both appearances and increased font scale. Use TalkBack
   to check the switch's label/state, scope radio selection, errors and system-settings button.
@@ -563,7 +563,7 @@ the bottom tab bar visible.
   accessible outage details and notification count. A valid empty feed says 未有相關停用通告.
 - Reopening, resuming and refreshing the viewer must add no background run. Force an offline
   execution, restore networking and retry. Verify failure then success and intact outage baselines.
-- Verify history across process restart and six-hour expiry. An interrupted run retains its
+- Verify history across process restart and eviction when a 31st run is added. An interrupted run retains its
   last recorded stage. Empty history explains Android scheduling and when recording begins.
 - Review light/dark appearance, increased text size and system Back on Android. On iOS/web,
   verify the Android availability explanation. Native exports alone do not establish runtime behavior.
@@ -670,7 +670,7 @@ in `/tmp/mtr-sdk58-evidence/`. The locally debug-key-signed release-mode test AP
   permission feedback, empty/loading/error states and Android-only information on iOS/web.
 - Runs start collapsed, newest first, with a Hong Kong time and short outcome. Tap to expand
   saved details, tap again to collapse, and open another row to close the previous row.
-- Refresh while a run is expanded. It stays open if retained, and disappears after six-hour expiry.
+- Refresh while a run is expanded. It stays open if retained, and closes when evicted.
   Refreshing, opening and expanding must not call MTR or add background entries.
 - Check English station names, MTR English facility text for new runs, labeled source text
   for older records and English explanations for skips, invalid feeds and API/post-feed failures.
@@ -802,3 +802,82 @@ screen placements, strip height and icons to DESIGN.md and the existing color me
   `release-settings-light.png`, `release-settings-dark-large.png`, `background-result.json`,
   `repeat-result.json` and native build logs. These native results supersede the earlier
   no-connected-device limitation for the tested scenarios above.
+
+## Configurable facility polling
+
+- Rebuild the native app. Verify the Settings slider defaults to 15 minutes, snaps to all five
+  choices, supports tapping labels and announces minutes with TalkBack or VoiceOver. Drag
+  without releasing to confirm it previews before saving. Restart to check persistence.
+- Review the control in light, dark and Little Twin Stars, with large text and narrow or
+  landscape layouts. On web verify the explanation and official information link.
+- On Android with alerts enabled, switch 15 → 1 → 5 → 10 → 30 → 15. Check that only
+  the expected scheduler is registered and a repeated selection does not reset it. Watch
+  the developer log for the scheduler and target interval, and record actual Hong Kong run
+  timestamps. Confirm the latest 30 runs remain visible even when older than six hours.
+- Leave the app, turn off the screen, kill the background process, and reboot/unlock without
+  reopening. Test both scheduling paths. Try offline/recovery and denied notification
+  permission. Force-stop separately, then reopen to verify scheduling resumes.
+
+For a connected test emulator, substitute its serial below. Verify the AVD name and display
+profile before using captures as device layout evidence.
+
+```sh
+adb devices -l
+adb -s emulator-5554 emu avd name
+adb -s emulator-5554 shell wm size
+adb -s emulator-5554 shell wm density
+adb -s emulator-5554 shell dumpsys alarm | rg 'mtrnexttrain|facility-outage-check'
+adb -s emulator-5554 shell dumpsys jobscheduler | rg -A 12 'mtrnexttrain'
+adb -s emulator-5554 logcat -d -s TSBackgroundFetch BackgroundTaskConsumer ReactNativeJS
+adb -s emulator-5554 shell input keyevent KEYCODE_HOME
+adb -s emulator-5554 shell am kill com.sps99133.mtrnexttrain
+adb -s emulator-5554 reboot
+```
+
+After reboot, unlock the emulator without opening the app and inspect the registrations and
+logs again. For WorkManager, use the job ID and namespace shown by `dumpsys jobscheduler`.
+
+```sh
+adb -s emulator-5554 shell cmd jobscheduler run -f -n androidx.work.systemjobscheduler com.sps99133.mtrnexttrain JOB_ID
+```
+
+A forced run verifies execution, while a timestamp from a natural run verifies that the OS
+actually woke it.
+
+### Configurable polling verification, 2026-11-10
+
+- `npm run check` passed all 20 Expo Doctor checks after moving the generated Android
+  project out of the workspace. `npm run export:all`, both existing API/facility scripts and
+  `git diff --check` passed. The Android arm64 debug and minified release APKs built.
+- The Galaxy S26 Ultra AVD reported `Samsung_Galaxy_S26_Ultra_API_36`, 1440×3120 at
+  480 dpi. Its system image is Google Android 16. This does not cover Samsung One UI.
+  The release APK did not request exact-alarm permissions.
+- The installed build changed 15 → 5 by dragging, then 5 → 10 → 30 → 1 by tapping labels.
+  System dumps showed the 5/10/1-minute alarms and the 30-minute WorkManager job.
+  With the display asleep after a normal background process kill at 11:04:26, Android
+  started and completed an AlarmManager headless run at 11:05:22 HKT. The 1-minute
+  target was set at 11:03:37. After reboot/unlock, Android delivered the boot broadcast
+  and restored the alarm at 11:08:33 while the launcher remained in front.
+  The restored alarm fired at 11:10:18 and the run completed at 11:10:21. Developer
+  Tools showed both runs as completed, with their dates and Hong Kong times.
+- Force-stop removed the short alarm, and reopening recovered the saved 1-minute setting
+  and registration. Returning to 15 minutes removed the alarm and registered WorkManager.
+  A forced Expo worker started at 11:13:32 and succeeded at 11:13:33 HKT. Natural 15-
+  and 30-minute execution was not timed.
+- Facilities kept the previous data with a stale warning when Wi-Fi and mobile data were
+  disabled. After restoring connectivity, a manual refresh cleared the warning.
+- Revoking notification permission showed the explanation and Android Settings button.
+  The original permission was restored. The denied background check is covered by the
+  monitor assertions.
+- Headless Chrome rendered the Settings explanation at 390 and 1024 CSS pixels, and
+  the Facilities and Developer Tools fallback views at 390 CSS pixels.
+- Impeccable source and Android capture review covered Settings in light, dark at 150%
+  system text, and Little Twin Stars, plus Developer Tools at 150% text. Labels and
+  run summaries wrapped without clipping. Android exposed the slider as a named seek
+  bar with its current minutes, and the interval buttons exposed their selected state.
+- **P2, Settings slider drag target.** The Android seek bar in
+  `ui/component/FacilityPollingSettings.tsx` reported an 18 dp native height. The
+  additional hit area did not capture a swipe above the native bar in this test. Each
+  interval has a 48 dp tappable label as an alternative. Revisit the drag target when
+  the native slider supports setting its touch height.
+- No iOS runtime, spoken screen-reader traversal, or physical Samsung device was tested.

@@ -23,7 +23,7 @@ Web uses a centered content column of at most 720 units.
 | `/search` | SelectStationScreen | Select line/station and view arrivals |
 | `/favorites` | Redirect | Compatibility redirect to `/` |
 | `/settings` | SettingsScreen | Appearance preference, Android facility alerts, version and credit |
-| `/dev` | DeveloperScreen | English developer tools, Android notification tests and expandable six-hour background activity |
+| `/dev` | DeveloperScreen | English developer tools, Android notification tests and the latest 30 background runs |
 | `/station/[stationCode]` | NextTrainByStationScreen | Arrivals and favorite toggle |
 | `/facilities` | FacilityOutageScreen | Facility notices or official-site web fallback |
 | `/station/[stationCode]/facilities` | FacilityOutageScreen | Station-scoped facility notices |
@@ -95,8 +95,11 @@ Native apps request `https://tnews.mtr.com.hk/facility/outage.xml` through
 inside CDATA. Notices are grouped by station; the default accessibility filter includes
 MTR's AJ/VJ/HJ/MJ families. All facilities also includes escalators and unknown types.
 
-The outage hook refreshes on focus/foreground return, every 60 seconds while focused and
-active, and through manual refresh. Requests have a 10-second timeout, overlap protection,
+The outage hook refreshes on focus/foreground return, on the selected interval while focused
+and active, and through manual refresh. Settings saves one of 1, 5, 10, 15 or 30 minutes under
+`facility_polling_interval`, separately from bookmarks and alert state. Missing or invalid values
+default to 15 minutes. The outage screen and Android monitor share concurrent feed requests
+and can cancel independently. Requests have a 10-second timeout, overlap protection,
 cancellation/generation guards and HTTP 429 cooldowns. Failures retain explicitly stale
 results. Dates are interpreted as Hong Kong time; restoration wording comes from MTR's
 message. Empty feeds are not evidence that all facilities are operating.
@@ -107,10 +110,13 @@ No backend, persistent outage cache or change to favorites storage is introduced
 
 ## Android facility alerts
 
-`index.js` imports the platform notification service before Expo Router. Android defines
-one headless TaskManager task using Expo BackgroundTask / WorkManager, with a 15-minute
-minimum interval. Android restores scheduled work after reboot, subject to battery and
-network restrictions. Force-stop suspends work until the app is opened again.
+`index.js` imports the platform notification service before Expo Router, registering both
+headless handlers. Android uses Expo BackgroundTask / WorkManager for 15 and 30 minutes
+and a repeating inexact AlarmManager task via React Native Background Fetch for 1, 5 and
+10 minutes. The service cancels the old schedule before switching. Both handlers read the
+saved settings and skip obsolete work. Android restores scheduled work after reboot and
+unlock, subject to battery and network restrictions. Force-stop suspends work until the app
+is opened again. Android prebuild excludes the exact-alarm permission from the merged manifest.
 `plugins/withWorkManagerKeepRules.js` preserves the generated Room database constructor
 used reflectively by WorkManager. The rule is applied during Android prebuild so optimized
 release builds can initialize background scheduling at startup.
@@ -122,7 +128,8 @@ remain readable. Existing `favorite_station_list` remains a JSON string array. S
 writes invalidate removed stations' baselines. Newly monitored stations silently establish
 baselines on their first successful check. Re-enabling alerts starts fresh baselines.
 The Android service serializes preference changes, bookmark invalidation and checks.
-Foreground startup/resume also reconciles registration and checks enabled alerts.
+Foreground startup/resume reconciles registration and checks enabled alerts. An active-app
+timer follows the same interval even outside the Facilities screen.
 
 The existing XML parser and AJ/VJ/HJ/MJ classifier supply observations. Station/facility ID
 identifies an ongoing outage, falling back to notice ID. Failed requests and malformed XML
@@ -153,22 +160,23 @@ A normal Favorites gear tap opens Settings; long press or its named accessibilit
 `/dev`. Both preserve the Favorites screen underneath. Settings reads the version from
 `Constants.expoConfig.version` and shows `Development by Max Wong`.
 
-Android's TaskManager callback alone writes `facility_activity_log_v1`, separate from alert
+Android's background callbacks write `facility_activity_log_v1`, separate from alert
 preferences and baselines. Each run persists start, request and parsed-feed stages, followed by
 success, skip or failure. Entries retain the monitored scope, API-call indicator, station count,
-accessible outage details and successfully submitted notification count. API request failures,
+accessible outage details and successfully submitted notification count. New runs also record the
+requested interval and scheduler. API request failures,
 invalid feeds and post-feed processing failures have distinct reasons. An unfinished entry shows
 its last recorded stage. Diagnostic write failures do not change monitor outcomes. Foreground
 startup/resume checks, setting changes and notification tests do not create background records.
 
-History expires six hours after each run starts and is pruned on reads/writes. The virtualized
+History retains up to 30 runs regardless of age and is pruned on reads/writes. The virtualized
 viewer orders runs newest first, renders Hong Kong timestamps, and rereads local history on focus,
 foreground return or refresh. It never requests the facility feed. No entries can be recovered
 from before installation of this logging feature. Notification tests retain their existing
 Android behavior, while iOS/web explain Android availability.
 
 The Developer Tools screen uses English labels and diagnostics. Background runs initially show
-a Hong Kong time and short outcome. Tapping a row expands its saved details, with one row
-open at a time. Local refresh preserves the expanded run until it expires. New records retain
+a Hong Kong date, time and short outcome. Tapping a row expands its saved details, with one row
+open at a time. Local refresh preserves the expanded run until it is evicted. New records retain
 MTR's English facility text alongside the existing fields. Older records fall back to labeled
 source text, and known persisted Chinese diagnostic reasons are displayed in English.

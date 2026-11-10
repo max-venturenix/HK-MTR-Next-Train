@@ -52,10 +52,36 @@ export function parseFacilityOutageFeed(xml: string): FacilityOutageFeed {
 
 export class InvalidFacilityFeedError extends Error {}
 
-export async function getFacilityOutages(signal?: AbortSignal): Promise<FacilityOutageFeed> {
+async function fetchFacilityOutages(signal: AbortSignal): Promise<FacilityOutageFeed> {
     const response = await axios.get<string>("https://tnews.mtr.com.hk/facility/outage.xml", {
         responseType: "text", transformResponse: [data => data], timeout: 10000, signal
     });
     try { return parseFacilityOutageFeed(response.data); }
     catch { throw new InvalidFacilityFeedError("Invalid facility XML"); }
+}
+
+let pending: {controller: AbortController; promise: Promise<FacilityOutageFeed>; readers: number} | undefined;
+
+export function getFacilityOutages(signal?: AbortSignal): Promise<FacilityOutageFeed> {
+    if (signal?.aborted) return Promise.reject(new Error("Facility request canceled"));
+    if (!pending) {
+        const controller = new AbortController();
+        pending = {controller, readers: 0, promise: fetchFacilityOutages(controller.signal).finally(() => {
+            if (pending?.controller === controller) pending = undefined;
+        })};
+    }
+    const request = pending;
+    request.readers++;
+    let abort: () => void;
+    return new Promise<FacilityOutageFeed>((resolve, reject) => {
+        abort = () => reject(new Error("Facility request canceled"));
+        signal?.addEventListener("abort", abort);
+        void request.promise.then(resolve, reject);
+    }).finally(() => {
+        signal?.removeEventListener("abort", abort);
+        if (--request.readers === 0 && pending === request) {
+            pending = undefined;
+            request.controller.abort();
+        }
+    });
 }

@@ -7,9 +7,11 @@ on Favorites. Under 設定 → 外觀, choose 跟隨系統 (default), 淺色, �
 Little Twin Stars（雙子星）. The last option is a fixed pastel light theme with bundled Kiki and Lala artwork.
 Settings offers opt-in Android accessibility facility outage and recovery alerts for favorites or all stations.
 Existing outages establish a silent baseline. New outages and removed outage notices each notify once per station per check; removal from a valid feed is treated as recovery.
-Background checks request a 15-minute minimum interval and resume after normal device reboot.
+Settings offers 1, 5, 10, 15 and 30 minute refresh intervals (default 15) for native facility
+screens and enabled Android monitoring. Background checks use AlarmManager below 15 minutes
+and Expo BackgroundTask at 15 or 30 minutes. Both resume after normal device reboot and unlock.
 Long-press the Favorites settings gear to open 開發者工具, with Android notification tests
-and a persistent six-hour background activity log. Settings shows the app version and developer credit.
+and a persistent log of the latest 30 background runs. Settings shows the app version and developer credit.
 Android battery/network restrictions can delay checks. Rebuild the native app for this feature. The interface uses Traditional Chinese. The 設施 tab shows native facility outage notices
 with accessibility filtering; station details also link to station-specific notices. Web links
 to MTR’s official facility information.

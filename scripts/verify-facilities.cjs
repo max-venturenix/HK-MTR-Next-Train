@@ -59,10 +59,11 @@ console.log("Facility XML, classification, filtering, fallback and timezone asse
             useState: initial => { const index = state.length; state.push(initial);
                 return [initial, value => { state[index] = typeof value === "function" ? value(state[index]) : value; }]; }};
         if (name === "react-native") return {AppState: appState, Platform: {OS: "ios"}};
+        if (name === "@react-native-async-storage/async-storage") return {getItem: async () => null};
         if (name === "expo-router") return {useFocusEffect: fn => { effect = fn; }};
         return originalLoad.call(this, name, ...args);
     };
-    global.setInterval = (fn, duration) => { assert.equal(duration, 60000); tick = fn; return 1; };
+    global.setInterval = (fn, duration) => { assert.equal(duration, 900000); tick = fn; return 1; };
     global.clearInterval = () => { cleared = true; };
     api.getFacilityOutages = signal => new Promise((resolve, reject) => requests.push({signal, resolve, reject}));
     const settle = async () => { for (let i = 0; i < 6; i++) await Promise.resolve(); };
@@ -71,6 +72,7 @@ console.log("Facility XML, classification, filtering, fallback and timezone asse
         const hook = useFacilityOutages();
         const cleanup = effect();
         assert.equal(requests.length, 1);
+        await settle();
         tick(); void hook.refresh();
         assert.equal(requests.length, 1);
         requests[0].resolve(feed); await settle();
@@ -93,6 +95,7 @@ console.log("Facility XML, classification, filtering, fallback and timezone asse
     } finally {
         Module._load = originalLoad; global.setInterval = originalInterval; global.clearInterval = originalClear;
         api.getFacilityOutages = originalGet;
+        delete require.cache[require.resolve("../services/facilityPollingInterval.ts")];
     }
 })().catch(error => { console.error(error); process.exitCode = 1; });
 
@@ -109,6 +112,11 @@ async function verifyAlerts() {
     let failStation;
     let task;
     let registered = false;
+    let expoInterval, alarmOptions, headless, alarmTimeout, blockedRequest;
+    let failSchedule = false;
+    let expoRegistrations = 0, alarmRegistrations = 0, fetches = 0;
+    const finished = [];
+    const appState = {currentState: "background"};
     let granted = true;
     let responseListener;
     let lastResponse = null;
@@ -120,14 +128,43 @@ async function verifyAlerts() {
             getItem: async key => key === "facility_alert_state_v1" ? stored ?? null : historyStore.get(key) ?? null,
             setItem: async (key, value) => {
                 if (key === "facility_alert_state_v1") stored = value;
-                else { if (failLog) throw new Error("Storage full"); historyStore.set(key, value); }
-            }
+                else { if (failLog && key === "facility_activity_log_v1") throw new Error("Storage full"); historyStore.set(key, value); }
+            },
+            removeItem: async key => historyStore.delete(key)
         },
+        "expo": {isRunningInExpoGo: () => false},
+        "react-native": {AppState: appState},
+        "react-native-background-fetch": {default: {
+            STATUS_AVAILABLE: 2,
+            configure: async (_, callback, timeout) => { alarmTimeout = timeout; return 2; },
+            scheduleTask: async options => {
+                assert.equal(registered, false, "cancel Expo before registering AlarmManager");
+                if (failSchedule) return false;
+                assert.equal(options.forceAlarmManager, true);
+                assert.equal(options.periodic, true);
+                assert.equal(options.enableHeadless, true);
+                assert.equal(options.startOnBoot, true);
+                assert.equal(options.stopOnTerminate, false);
+                alarmOptions = options;
+                alarmRegistrations++;
+                return true;
+            },
+            stop: async id => {
+                if (alarmOptions?.taskId === id) alarmOptions = undefined;
+                return true;
+            },
+            finish: id => finished.push(id),
+            registerHeadlessTask: fn => { headless = fn; }
+        }},
         "expo-background-task": {BackgroundTaskResult: {Success: 1, Failed: 2},
             BackgroundTaskStatus: {Available: 1}, getStatusAsync: async () => 1,
-            registerTaskAsync: async (_, options) => { assert.equal(options.minimumInterval, 15); registered = true; },
+            registerTaskAsync: async (_, options) => {
+                assert.equal(alarmOptions, undefined, "cancel AlarmManager before registering Expo");
+                expoInterval = options.minimumInterval; registered = true; expoRegistrations++;
+            },
             unregisterTaskAsync: async () => { registered = false; }},
-        "expo-task-manager": {defineTask: (_, fn) => { task = fn; }, isTaskRegisteredAsync: async () => registered},
+        "expo-task-manager": {defineTask: (_, fn) => { task = fn; }, isTaskRegisteredAsync: async () => registered,
+            getTaskOptionsAsync: async () => ({minimumInterval: expoInterval})},
         "expo-notifications": {
             addNotificationResponseReceivedListener: listener => { responseListener = listener; return {remove: () => { responseRemoved = true; }}; },
             getLastNotificationResponseAsync: async () => lastResponse,
@@ -145,14 +182,19 @@ async function verifyAlerts() {
                 triggers.push(trigger);
             }},
         "../api/FrequentStationsApi": {getFavoriteStations: async () => favorites},
-        "../api/FacilityOutageApi": {InvalidFacilityFeedError: api.InvalidFacilityFeedError, getFacilityOutages: async () => {
+        "../api/FacilityOutageApi": {InvalidFacilityFeedError: api.InvalidFacilityFeedError, getFacilityOutages: async signal => {
+            fetches++;
+            if (blockedRequest) return new Promise((resolve, reject) => {
+                blockedRequest(signal);
+                signal.addEventListener("abort", () => reject(new Error("Aborted")), {once: true});
+            });
             if (invalidFeed) throw new api.InvalidFacilityFeedError("Invalid XML");
             if (failFetch) throw new Error("Offline or invalid XML");
             return {notices};
         }}
     };
     Module._load = function (request, parent, main) {
-        if ((parent?.filename.endsWith("facilityNotifications.android.ts") || parent?.filename.endsWith("facilityActivityLog.ts")) && mocks[request]) return mocks[request];
+        if ((parent?.filename.endsWith("facilityNotifications.android.ts") || parent?.filename.endsWith("facilityActivityLog.ts") || parent?.filename.endsWith("facilityPollingInterval.ts")) && mocks[request]) return mocks[request];
         return originalLoad.call(this, request, parent, main);
     };
     let monitor;
@@ -172,7 +214,7 @@ async function verifyAlerts() {
     assert.equal(history()[0].stage, "success");
     assert.equal(history()[0].facilities.length, 3);
     assert.deepEqual(history()[0].facilities[0].english, bilingualFeed.notices[0].english);
-    assert.equal(history()[0].notifications, 1);
+    assert.equal(history().find(row => row.notifications)?.notifications, 1);
     assert.equal(history()[0].stationsChecked, 2);
     assert.equal(deliveries.length, 1, "overlapping checks produce one station alert");
     assert.equal(deliveries[0].data.stationCode, "DIH");
@@ -185,20 +227,20 @@ async function verifyAlerts() {
     failFetch = true;
     assert.equal(await task(), 2);
     assert.equal(stored, before, "failed feed preserves observations");
-    assert.equal(history().at(-1).reason, "API 請求失敗");
+    assert.equal(history()[0].reason, "API 請求失敗");
     failFetch = false;
     invalidFeed = true;
     assert.equal(await task(), 2);
-    assert.equal(history().at(-1).reason, "設施資料格式無效");
+    assert.equal(history()[0].reason, "設施資料格式無效");
     invalidFeed = false;
     notices = [];
     await task();
-    assert.deepEqual(history().at(-1).facilities, []);
+    assert.deepEqual(history()[0].facilities, []);
     assert.equal(deliveries.at(-1).data.kind, "facility-recovery");
     assert.equal(deliveries.at(-1).title, "鑽石山站無障礙設施已恢復服務");
     assert.ok(deliveries.at(-1).body.includes("升降機（Concourse）"));
     assert.ok(deliveries.at(-1).body.endsWith("已恢復服務。"));
-    assert.equal(history().at(-1).notifications, 1);
+    assert.equal(history()[0].notifications, 1);
     await task();
     assert.equal(deliveries.length, 2, "recovery is not repeated");
     notices = [second];
@@ -217,8 +259,8 @@ async function verifyAlerts() {
     failStation = "HOK";
     assert.equal(await task(), 2);
     assert.equal(deliveries.length, 4);
-    assert.equal(history().at(-1).reason, "讀取設施資料後處理失敗");
-    assert.equal(history().at(-1).notifications, 1);
+    assert.equal(history()[0].reason, "讀取設施資料後處理失敗");
+    assert.equal(history()[0].notifications, 1);
     failStation = undefined;
     await task();
     assert.equal(deliveries.length, 5, "failed station retries without repeating successful station");
@@ -226,8 +268,8 @@ async function verifyAlerts() {
     granted = false;
     notices.push({...third, facilityId: "4"});
     await task();
-    assert.equal(history().at(-1).stage, "skipped");
-    assert.equal(history().at(-1).apiCalled, false);
+    assert.equal(history()[0].stage, "skipped");
+    assert.equal(history()[0].apiCalled, false);
     assert.equal(deliveries.length, 5, "revoked permission prevents delivery");
     await monitor.setAlertSettings(false, "favorites");
     assert.equal(registered, false);
@@ -241,7 +283,7 @@ async function verifyAlerts() {
     failLog = false;
     await monitor.setAlertSettings(false, "favorites");
     await task();
-    assert.equal(history().at(-1).reason, "通知監察已關閉");
+    assert.equal(history()[0].reason, "通知監察已關閉");
     failLog = true;
     assert.equal(await task(), 1, "log write failure does not fail a skipped monitor");
     failLog = false;
@@ -281,7 +323,7 @@ async function verifyAlerts() {
     assert.equal(logs.find(row => row.id === "interrupted").stage, "requesting", "persisted request stage survives module restart");
     assert.equal(logs.find(row => row.id === "interrupted").finishedAt, undefined);
     assert.ok(logs.every((row, index) => !index || logs[index - 1].startedAt >= row.startedAt));
-    assert.ok(!logs.some(row => row.id === "expired"));
+    assert.ok(logs.some(row => row.id === "expired"), "history is retained regardless of age");
     const count = logs.length;
     await reloaded.getFacilityActivity();
     assert.equal(history().length, count, "viewing history adds no run");
@@ -299,7 +341,7 @@ async function verifyAlerts() {
     await task();
     assert.equal(deliveries.length, beforeUnknownRecovery + 1, "all-stations retains previously observed unknown stations");
     assert.equal(deliveries.at(-1).data.stationCode, "UNKNOWN");
-    assert.equal(history().at(-1).notifications, 1);
+    assert.equal(history()[0].notifications, 1);
     await monitor.initializeFacilityNotifications();
     assert.equal(deliveries.length, beforeUnknownRecovery + 1, "restart does not repeat recovery");
     const response = (identifier, kind) => ({notification: {request: {identifier, content: {data: {kind}}}}});
@@ -318,7 +360,91 @@ async function verifyAlerts() {
     assert.equal(responseRemoved, true);
     responseListener(response("after-unsubscribe", "facility-recovery"));
     assert.equal(navigations, 4);
-    console.log("Background activity success, empty, skip, failure, expiry, interruption and isolation assertions passed.");
+    const historyKey = "facility_activity_log_v1";
+    historyStore.delete(historyKey);
+    assert.deepEqual(await reloaded.getFacilityActivity(), []);
+    const seed = Array.from({length: 31}, (_, i) => ({id: `run-${i}`, startedAt: now - i * 86400000,
+        stage: "started", apiCalled: false, notifications: 0}));
+    historyStore.set(historyKey, JSON.stringify(seed.toReversed()));
+    assert.deepEqual(await reloaded.getFacilityActivity(), seed.slice(0, 30));
+    assert.equal(history().length, 30);
+    await reloaded.saveFacilityActivity({...seed[3], stage: "success"});
+    assert.equal(history().find(row => row.id === seed[3].id).stage, "success");
+    assert.equal(history().length, 30);
+    await reloaded.saveFacilityActivity({...seed[0], id: "new", startedAt: now + 1});
+    assert.deepEqual(history().map(row => row.id), ["new", ...seed.slice(0, 29).map(row => row.id)]);
+    console.log("Background activity stages, 30-run retention, old records and storage isolation assertions passed.");
+
+    const intervals = require("../services/facilityPollingInterval.ts");
+    assert.equal(await intervals.getFacilityPollingInterval(), 15);
+    historyStore.set("facility_polling_interval", "12");
+    assert.equal(await intervals.getFacilityPollingInterval(), 15);
+    const originalBaseline = stored;
+    let oldAlarmId;
+    for (const interval of [1, 5, 10, 30, 15]) {
+        await monitor.setFacilityPollingInterval(interval);
+        assert.equal(await intervals.getFacilityPollingInterval(), interval);
+        assert.equal(registered, interval >= 15);
+        if (registered) assert.equal(expoInterval, interval);
+        else assert.equal(alarmOptions.delay, interval * 60000);
+        const schedules = expoRegistrations + alarmRegistrations;
+        await monitor.setFacilityPollingInterval(interval);
+        assert.equal(expoRegistrations + alarmRegistrations, schedules, "unchanged interval is idempotent");
+        if (oldAlarmId) {
+            const beforeFetch = fetches;
+            await headless({taskId: oldAlarmId, timeout: false});
+            assert.equal(fetches, beforeFetch, "obsolete alarm does not fetch");
+        }
+        oldAlarmId = alarmOptions?.taskId;
+    }
+    assert.equal(stored, originalBaseline, "switches retain outage baselines");
+    failSchedule = true;
+    await assert.rejects(monitor.setFacilityPollingInterval(1));
+    assert.equal(await intervals.getFacilityPollingInterval(), 1);
+    failSchedule = false;
+    await monitor.initializeFacilityNotifications();
+    assert.equal(alarmOptions.delay, 60000, "resume repairs failed registration");
+    const taskId = alarmOptions.taskId;
+    const beforeFetch = fetches;
+    await task();
+    assert.equal(fetches, beforeFetch, "obsolete Expo task does not fetch");
+    await headless({taskId, timeout: false});
+    assert.equal(finished.at(-1), taskId);
+    assert.equal(history()[0].interval, 1);
+    assert.equal(history()[0].scheduler, "alarm");
+
+    let signal;
+    const started = new Promise(resolve => { blockedRequest = current => { signal = current; resolve(); }; });
+    const run = headless({taskId, timeout: false});
+    await started;
+    const finishesBeforeTimeout = finished.length;
+    alarmTimeout(taskId);
+    await run;
+    blockedRequest = undefined;
+    assert.equal(signal.aborted, true);
+    assert.equal(finished.length, finishesBeforeTimeout + 1, "timed-out run finishes exactly once");
+    assert.equal(history()[0].reason, "背景檢查逾時");
+
+    const setIntervalOriginal = global.setInterval, clearIntervalOriginal = global.clearInterval;
+    let foregroundTick, timerCleared = false;
+    global.setInterval = (fn, delay) => { assert.equal(delay, 300000); foregroundTick = fn; return 100; };
+    global.clearInterval = id => { if (id === 100) timerCleared = true; };
+    try {
+        appState.currentState = "active";
+        await monitor.setFacilityPollingInterval(5);
+        const beforeTick = fetches;
+        foregroundTick();
+        await monitor.getAlertSettings();
+        assert.equal(fetches, beforeTick + 1);
+        await monitor.setAlertSettings(false, "all");
+        assert.equal(timerCleared, true);
+        assert.equal(alarmOptions, undefined);
+        assert.equal(registered, false);
+    } finally {
+        global.setInterval = setIntervalOriginal;
+        global.clearInterval = clearIntervalOriginal;
+    }
+    console.log("Intervals, scheduler switches, idempotence, repair, obsolete callbacks, timeout and foreground checks passed.");
     console.log("Android monitor baselines, grouping, deduplication, failures, scope, permission and cancellation assertions passed.");
 }
 async function verifyRecoveryComparison() {
@@ -375,4 +501,31 @@ async function verifyRecoveryComparison() {
     assert.deepEqual(events.at(-1).facilities, [undefined], "legacy keys recover without metadata");
     console.log("Recovery baseline, identity, metadata, scope and independent event retry assertions passed.");
 }
-verifyRecoveryComparison().then(verifyAlerts).catch(error => { console.error(error); process.exitCode = 1; });
+async function verifySharedRequests() {
+    const axios = require("axios");
+    const get = axios.get;
+    const requests = [];
+    axios.get = (_, {signal}) => new Promise((resolve, reject) => {
+        requests.push({signal, resolve});
+        signal.addEventListener("abort", () => reject(new Error("Aborted")), {once: true});
+    });
+    try {
+        const screen = new AbortController();
+        const page = api.getFacilityOutages(screen.signal);
+        const monitor = api.getFacilityOutages();
+        assert.equal(requests.length, 1);
+        screen.abort();
+        await assert.rejects(page);
+        assert.equal(requests[0].signal.aborted, false, "leaving the page keeps the monitor's request alive");
+        requests[0].resolve({data: xml(notice())});
+        assert.equal((await monitor).notices.length, 1);
+        const last = new AbortController();
+        const request = api.getFacilityOutages(last.signal);
+        last.abort();
+        await assert.rejects(request);
+        assert.equal(requests[1].signal.aborted, true, "cancel the network request when the last reader leaves");
+        console.log("Shared facility fetch and per-reader cancellation assertions passed.");
+    } finally { axios.get = get; }
+}
+verifyRecoveryComparison().then(verifyAlerts).then(verifySharedRequests)
+    .catch(error => { console.error(error); process.exitCode = 1; });

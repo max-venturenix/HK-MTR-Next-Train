@@ -48,7 +48,7 @@ export default function FacilityNotificationSettings() {
             </View>
         </TouchableRipple>
         <Text variant="bodyMedium" style={{color: colors.onSurfaceVariant}}>
-            約每 15 分鐘檢查一次，實際時間會受電池及網絡狀態影響。首次檢查只記錄現有停用設施，其後新停用及恢復服務各通知一次。已記錄的設施停用通告從有效資料中消失時，視為恢復服務並通知。
+            首次檢查只記錄現有停用設施，其後新停用及恢復服務各通知一次。已記錄的設施停用通告從有效資料中消失時，視為恢復服務並通知。
         </Text>
         <Text variant="titleMedium">通知範圍</Text>
         <RadioButton.Group value={settings?.scope ?? "favorites"}

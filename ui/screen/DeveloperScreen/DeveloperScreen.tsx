@@ -16,6 +16,8 @@ const reasonLabels: Record<string, string> = {
     "通知監察已關閉": "Monitoring is off", "通知權限未開啟": "Notification permission is disabled",
     "設施資料格式無效": "Invalid facility feed", "API 請求失敗": "API request failed",
     "讀取設施資料後處理失敗": "Processing failed after reading the feed", "無法開始檢查": "Unable to start check",
+    "背景排程已變更": "Background schedule changed", "背景檢查逾時": "Background check timed out",
+    "API 暫停接受請求": "API cooldown in effect",
     "通知權限未開啟，請到 Android 設定允許通知。": "Notification permission is disabled. Allow notifications in Android Settings."
 };
 function hongKongTimestamp(timestamp: number) {
@@ -71,18 +73,18 @@ export default function DeveloperScreen() {
                 <Button mode="outlined" icon="bell-outline" contentStyle={layout.button}
                     loading={testDelay === 10} disabled={testDelay !== undefined} onPress={() => void test(10)}>Test notification in 10 seconds</Button>
                 {feedback && <Text accessibilityLiveRegion="polite">{feedback}</Text>}
-                <Text variant="titleLarge" accessibilityRole="header">Background activity · Last 6 hours</Text>
+                <Text variant="titleLarge" accessibilityRole="header">Background activity · Latest 30 runs</Text>
                 <Text variant="bodyMedium" style={{color: colors.onSurfaceVariant}}>
-                    Android controls scheduling and may delay runs due to battery or network conditions. History begins with the first background run after this update. All times are Hong Kong time (UTC+08:00).
+                    Android may delay scheduled runs. All times are Hong Kong time (UTC+08:00).
                 </Text>
                 <Button icon="reload" loading={loading} disabled={loading} contentStyle={layout.button}
                     onPress={() => void load()}>Refresh</Button>
                 {error && <Text accessibilityRole="alert" style={{color: colors.error}}>{error}</Text>}
             </View>}
-            ListEmptyComponent={!loading && !error ? <Text variant="bodyLarge">No background runs recorded in the last 6 hours.</Text> : undefined}
+            ListEmptyComponent={!loading && !error ? <Text variant="bodyLarge">No background runs recorded.</Text> : undefined}
             renderItem={({item}) => {
                 const timestamp = hongKongTimestamp(item.startedAt);
-                const title = `${timestamp.slice(11)} · ${stageLabels[item.stage]}`;
+                const title = `${timestamp} · ${stageLabels[item.stage]}`;
                 const open = expanded === item.id;
                 return <View>
                     <Divider/>
@@ -98,6 +100,8 @@ export default function DeveloperScreen() {
                         <Text>{timestamp} (Hong Kong time)</Text>
                         <Text>{lastStageLabels[item.stage]}</Text>
                         {!!item.reason && <Text>{reasonLabels[item.reason] ?? item.reason}</Text>}
+                        {item.scheduler && <Text>Scheduler · {item.scheduler === "alarm" ? "AlarmManager" : "Expo BackgroundTask"}</Text>}
+                        {item.interval !== undefined && <Text>Requested interval · {item.interval} min</Text>}
                         <Text>Monitored scope · {item.scope === "all" ? "All stations" : item.scope === "favorites" ? "Favorite stations" : "Not read yet"}</Text>
                         <Text>MTR facility API · {item.apiCalled ? "Request started" : "Not called"}</Text>
                         {item.stationsChecked !== undefined && <Text>Facility feed read · {item.stationsChecked} stations checked</Text>}

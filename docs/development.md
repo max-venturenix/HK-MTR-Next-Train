@@ -73,7 +73,9 @@ Update documentation whenever commands or behavior change.
 ## Android notification development
 
 Install the committed dependency tree with `npm ci`. Background alerts require a rebuilt
-native binary containing `expo-background-task`, `expo-task-manager` and `expo-notifications`.
+native binary containing `expo-background-task`, `expo-task-manager`, `expo-notifications`
+and `react-native-background-fetch`. The Settings slider also requires the SDK-matched
+`@react-native-community/slider` native module.
 Use `npx expo run:android` to generate/build locally. Keep generated native projects out of
 commits. Use an installed build for background/reboot acceptance, since Expo Go does not
 establish the standalone app's permission, scheduling or reboot behavior. Keep `index.js`

@@ -8,6 +8,7 @@ import {layout} from "../../theme";
 import LittleTwinStarsArtwork, {LittleTwinStarsThumbnail} from "../../component/LittleTwinStarsArtwork";
 
 import FacilityNotificationSettings from "../../component/FacilityNotificationSettings";
+import FacilityPollingSettings from "../../component/FacilityPollingSettings";
 
 export default function SettingsScreen() {
     const {colors} = useTheme();
@@ -53,6 +54,7 @@ export default function SettingsScreen() {
                     <Text variant="bodySmall" style={{color: colors.onSurfaceVariant}}>Little Twin Stars © SANRIO CO., LTD.</Text>
                 </View>}
             </View>
+            <FacilityPollingSettings/>
             <FacilityNotificationSettings/>
             <View style={{marginTop: "auto", paddingTop: 24, gap: 8, alignItems: "center"}}>
                 <Text variant="bodyMedium" style={{color: colors.onSurfaceVariant}}>版本 {Constants.expoConfig?.version ?? "—"}</Text>
