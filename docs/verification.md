@@ -672,6 +672,10 @@ in `/tmp/mtr-sdk58-evidence/`. The locally debug-key-signed release-mode test AP
   saved details, tap again to collapse, and open another row to close the previous row.
 - Refresh while a run is expanded. It stays open if retained, and closes when evicted.
   Refreshing, opening and expanding must not call MTR or add background entries.
+- If a background check saves a new entry or finishes saving its result after the screen opens,
+  the list should reflect the change on its next automatic refresh without losing the expanded row.
+- The facility assertions reproduce a viewer reading an older snapshot while a background runtime
+  saves a newer run. The viewer's read must leave the newer run in storage.
 - Check English station names, MTR English facility text for new runs, labeled source text
   for older records and English explanations for skips, invalid feeds and API/post-feed failures.
 - Review light/dark themes, enlarged text, landscape and TalkBack expanded/collapsed state.

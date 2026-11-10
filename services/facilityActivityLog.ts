@@ -31,11 +31,8 @@ async function read(): Promise<FacilityActivity[]> {
     if (!Array.isArray(rows)) throw new Error("Invalid activity history");
     return rows.filter(row => row && Number.isFinite(row.startedAt));
 }
-export const getFacilityActivity = () => serialize(async () => {
-    const rows = newestFirst(await read());
-    await AsyncStorage.setItem(storageKey, JSON.stringify(rows));
-    return rows;
-});
+// A viewer in another JS runtime must never overwrite a background writer's newer snapshot.
+export const getFacilityActivity = async () => newestFirst(await read());
 // Diagnostic storage must never change the monitor's success, failure or retry outcome.
 export const saveFacilityActivity = (entry: FacilityActivity) => serialize(async () => {
     const rows = await read();

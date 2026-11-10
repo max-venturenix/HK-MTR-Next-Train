@@ -105,6 +105,7 @@ async function verifyAlerts() {
     let stored;
     const historyStore = new Map();
     let failLog = false;
+    let pauseHistoryRead;
     let invalidFeed = false;
     let favorites = ["DIH", "HOK"];
     let notices = [feed.notices[0]];
@@ -125,7 +126,15 @@ async function verifyAlerts() {
     const triggers = [];
     const mocks = {
         "@react-native-async-storage/async-storage": {
-            getItem: async key => key === "facility_alert_state_v1" ? stored ?? null : historyStore.get(key) ?? null,
+            getItem: async key => {
+                const value = key === "facility_alert_state_v1" ? stored ?? null : historyStore.get(key) ?? null;
+                if (key === "facility_activity_log_v1" && pauseHistoryRead) {
+                    const pause = pauseHistoryRead;
+                    pauseHistoryRead = undefined;
+                    await pause();
+                }
+                return value;
+            },
             setItem: async (key, value) => {
                 if (key === "facility_alert_state_v1") stored = value;
                 else { if (failLog && key === "facility_activity_log_v1") throw new Error("Storage full"); historyStore.set(key, value); }
@@ -367,13 +376,21 @@ async function verifyAlerts() {
         stage: "started", apiCalled: false, notifications: 0}));
     historyStore.set(historyKey, JSON.stringify(seed.toReversed()));
     assert.deepEqual(await reloaded.getFacilityActivity(), seed.slice(0, 30));
-    assert.equal(history().length, 30);
     await reloaded.saveFacilityActivity({...seed[3], stage: "success"});
     assert.equal(history().find(row => row.id === seed[3].id).stage, "success");
     assert.equal(history().length, 30);
-    await reloaded.saveFacilityActivity({...seed[0], id: "new", startedAt: now + 1});
+    let resumeRead;
+    const readPaused = new Promise(captured => {
+        pauseHistoryRead = () => new Promise(resolve => { resumeRead = resolve; captured(); });
+    });
+    const viewing = reloaded.getFacilityActivity();
+    await readPaused;
+    await log.saveFacilityActivity({...seed[0], id: "new", startedAt: now + 1});
+    resumeRead();
+    await viewing;
     assert.deepEqual(history().map(row => row.id), ["new", ...seed.slice(0, 29).map(row => row.id)]);
-    console.log("Background activity stages, 30-run retention, old records and storage isolation assertions passed.");
+    assert.equal((await reloaded.getFacilityActivity())[0].id, "new", "a stale viewer read cannot erase a new background run");
+    console.log("Background activity stages, 30-run retention, old records and concurrent viewer assertions passed.");
 
     const intervals = require("../services/facilityPollingInterval.ts");
     assert.equal(await intervals.getFacilityPollingInterval(), 15);

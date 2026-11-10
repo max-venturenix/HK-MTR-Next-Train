@@ -169,9 +169,10 @@ invalid feeds and post-feed processing failures have distinct reasons. An unfini
 its last recorded stage. Diagnostic write failures do not change monitor outcomes. Foreground
 startup/resume checks, setting changes and notification tests do not create background records.
 
-History retains up to 30 runs regardless of age and is pruned on reads/writes. The virtualized
-viewer orders runs newest first, renders Hong Kong timestamps, and rereads local history on focus,
-foreground return or refresh. It never requests the facility feed. No entries can be recovered
+History retains up to 30 runs regardless of age and is pruned when runs are saved. The viewer reads
+without writing, orders runs newest first and renders Hong Kong timestamps. It reads on focus,
+foreground return or refresh and checks for new entries every three seconds while visible in the
+foreground. It never requests the facility feed. No entries can be recovered
 from before installation of this logging feature. Notification tests retain their existing
 Android behavior, while iOS/web explain Android availability.
 

@@ -33,22 +33,38 @@ export default function DeveloperScreen() {
     const [feedback, setFeedback] = useState<string>();
     const [testDelay, setTestDelay] = useState<0 | 10>();
     const testing = useRef(false);
-    const load = useCallback(async () => {
-        setLoading(true);
-        setError(undefined);
+    const reading = useRef(false);
+    const load = useCallback(async (showLoading = true) => {
+        if (reading.current) return;
+        reading.current = true;
+        if (showLoading) {
+            setLoading(true);
+            setError(undefined);
+        }
         try {
             const history = await getFacilityActivity();
             setRows(history);
             setExpanded(current => history.some(row => row.id === current) ? current : undefined);
+            setError(undefined);
         }
         catch { setError("Unable to read background activity. Refresh to try again."); }
-        finally { setLoading(false); }
+        finally {
+            reading.current = false;
+            if (showLoading) setLoading(false);
+        }
     }, []);
     useFocusEffect(useCallback(() => {
         if (Platform.OS !== "android") return;
         void load();
         const subscription = AppState.addEventListener("change", state => { if (state === "active") void load(); });
-        return () => subscription.remove();
+        // A headless check may still be saving a run when the app returns to the foreground.
+        const refresh = setInterval(() => {
+            if (AppState.currentState === "active") void load(false);
+        }, 3000);
+        return () => {
+            subscription.remove();
+            clearInterval(refresh);
+        };
     }, [load]));
     const test = async (delay: 0 | 10) => {
         if (testing.current) return;
